@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import com.ayushtech.wordwave.dbconnectivity.LevelsDao;
 import com.ayushtech.wordwave.util.UtilService;
@@ -144,10 +143,19 @@ public class CrosswordGameHandler {
 			return;
 		}
 		event.deferEdit().queue();
+		int userBalance = LevelsDao.getInstance().getUserBalance(event.getUser().getIdLong());
+		if (userBalance < 100) {
+			event.getHook().sendMessage("You dont have enough balance to use hint!").setEphemeral(true).queue();
+			return;
+		}
 		var game = gameMap.get(event.getUser().getIdLong());
-		game.activateHint();
-//			TODO : Deduct User Coin Async
-
+		if (game.activateHint()) {
+			CompletableFuture.runAsync(() -> {
+				LevelsDao.getInstance().deductUserBalance(event.getUser().getIdLong(), 100);
+			});
+		} else {
+			event.getHook().sendMessage("No empty space left for hint").setEphemeral(true).queue();
+		}
 	}
 
 	public void handleShuffleButton(ButtonInteractionEvent event) {
@@ -190,6 +198,7 @@ public class CrosswordGameHandler {
 			var game = gameMap.get(authorId);
 			String message = event.getMessage().getContentRaw().toLowerCase();
 			var response = game.checkWord(message);
+			// If the word is correct for the crossword and first time answerred
 			if (response.isCorrect()) {
 				event.getMessage().addReaction(Emoji.fromUnicode("U+2705")).queue();
 				if (event.isFromGuild() && event.getGuild().getSelfMember().hasPermission(event.getGuildChannel(),
@@ -205,15 +214,23 @@ public class CrosswordGameHandler {
 						e.printStackTrace();
 					}
 				}
-			} else {
+			}
+			// If the word is not in the crossword
+			else {
+				// If the answer is an actual word
 				if (allWordList.contains(message)) {
 					CompletableFuture.runAsync(() -> {
+						// If the word is already answerred
 						if (game.isWordAnswerred(message)) {
+							event.getMessage().addReaction(Emoji.fromUnicode("U+1F501")).queue();
 							if (event.isFromGuild() && event.getGuild().getSelfMember()
 									.hasPermission(event.getGuildChannel(), Permission.MESSAGE_MANAGE)) {
 								event.getMessage().delete().queueAfter(10, TimeUnit.SECONDS);
 							}
-						} else {
+						}
+						// If the word is not answerred yet
+						else {
+							// If the word can be formed using provided letters
 							if (game.isWordSuitable(message)) {
 								game.addAnswerredWords(message);
 								event.getMessage().addReaction(Emoji.fromUnicode("U+1F4DD")).queue();
@@ -221,7 +238,7 @@ public class CrosswordGameHandler {
 										.hasPermission(event.getGuildChannel(), Permission.MESSAGE_MANAGE)) {
 									event.getMessage().delete().queueAfter(10, TimeUnit.SECONDS);
 								}
-								LevelsDao.getInstance().incrementExtraWord(authorId);
+								LevelsDao.getInstance().updateExtraWordCount(authorId, 1, true);
 							}
 						}
 					});

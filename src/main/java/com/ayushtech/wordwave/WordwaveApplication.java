@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import com.ayushtech.wordwave.listeners.MainListener;
+import com.ayushtech.wordwave.util.UtilService;
 
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -23,6 +24,9 @@ public class WordwaveApplication {
 			System.exit(0);
 		}
 		final String BOT_TOKEN = properties.getProperty("BOT_TOKEN");
+		final String guildEventWebhook = properties.getProperty("SERVER_EVENT_WEBHOOK");
+		
+		UtilService.getInstance().setGuildEventWebhookUrl(guildEventWebhook);
 
 //		DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(BOT_TOKEN,
 //				GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES);

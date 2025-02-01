@@ -6,7 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
+import com.ayushtech.wordwave.dbconnectivity.LevelsDao;
 import com.ayushtech.wordwave.util.UtilService;
 
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -16,6 +18,9 @@ import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 public class CrosswordGame {
+
+	private static Random random = new Random();
+
 	private long userId;
 	private final int asciA = 97;
 	private final int levelNumber;
@@ -40,13 +45,18 @@ public class CrosswordGame {
 		eb.setTitle(String.format("Level %d", levelNumber));
 		eb.setDescription(getGridFormated());
 		eb.setColor(Color.yellow);
-		eb.addField("__Allowed Letters__", level.getAllowedLetters(), false);
+		StringBuilder sb = new StringBuilder(level.getAllowedLetters());
+		sb.append(String.format("\nMinimum Word Size : `%d`", level.getMinWordSize()));
+		sb.append(String.format("\nMaximum Word Size : `%d`", level.getMaxWordSize()));
+		eb.addField("__Allowed Letters__", sb.toString(), false);
+
 		this.channel.sendMessageEmbeds(eb.build())
 				.addActionRow(
 						Button.primary("shuffleCrossword_" + userId,
 								Emoji.fromFormatted("<:refresh:1209076086185656340>")),
 						Button.primary("hintCrossword_" + userId, "💡 (100 🪙)"))
-				.addActionRow(Button.danger("quitCrossword_" + userId, "Quit"), Button.primary("extraWords", "Extra Words"))
+				.addActionRow(Button.danger("quitCrossword_" + userId, "Quit"),
+						Button.primary("extraWords", "Extra Words"))
 				.queue(message -> this.messageId = message.getIdLong());
 	}
 
@@ -70,6 +80,9 @@ public class CrosswordGame {
 		eb.setFooter("Game quit!");
 		event.editMessageEmbeds(eb.build()).setActionRow(Button.primary("newCrossword_" + userId, "Start New Game"))
 				.queue();
+		CompletableFuture.runAsync(() -> {
+			LevelsDao.getInstance().updateExtraWordCount(userId, extraWords.size(), false);
+		});
 	}
 
 	public void cancelGame() {
@@ -81,6 +94,9 @@ public class CrosswordGame {
 		eb.setFooter("Game cancelled!");
 		this.channel.editMessageEmbedsById(messageId, eb.build())
 				.setActionRow(Button.danger("cancelled", "Cancelled").asDisabled()).queue();
+		CompletableFuture.runAsync(() -> {
+			LevelsDao.getInstance().updateExtraWordCount(userId, extraWords.size(), false);
+		});
 	}
 
 	private void completeThisLevel() {
@@ -115,19 +131,22 @@ public class CrosswordGame {
 		return gridFormatted.toString();
 	}
 
-	public void activateHint() {
-		Random random = new Random();
-		int i = random.nextInt(currentLevel.getColumns());
-		int j = random.nextInt(currentLevel.getRows());
-		int counter = 0;
-		final int bound = currentLevel.getRows() * currentLevel.getColumns();
-		while (currentLevel.getGridUnsolved()[i][j] != '+' && counter < bound) {
-			i = random.nextInt(currentLevel.getColumns());
-			j = random.nextInt(currentLevel.getRows());
-			counter++;
+	public boolean activateHint() {
+		List<CrosswordPointer> emptyPositionList = new ArrayList<CrosswordPointer>();
+		for (int i = 0; i < currentLevel.getColumns(); i++) {
+			for (int j = 0; j < currentLevel.getRows(); j++) {
+				if (currentLevel.getGridUnsolved()[i][j] == '-')
+					emptyPositionList.add(new CrosswordPointer(i, j));
+			}
 		}
-		currentLevel.unlockLetter(i, j);
-		updateEmbed();
+		if (emptyPositionList.size()==0) {
+			return false;
+		} else {
+			var pointer = emptyPositionList.get(random.nextInt(emptyPositionList.size()));
+			currentLevel.unlockLetter(pointer.i(), pointer.j());
+			updateEmbed();
+			return true;
+		}
 	}
 
 //	private boolean isLastLetterRemaining() {
@@ -190,7 +209,7 @@ public class CrosswordGame {
 		extraWords.add(word);
 		return true;
 	}
-	
+
 	public List<String> getExtraWords() {
 		return this.extraWords;
 	}

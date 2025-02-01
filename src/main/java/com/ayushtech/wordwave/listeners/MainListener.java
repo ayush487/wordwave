@@ -2,7 +2,10 @@ package com.ayushtech.wordwave.listeners;
 
 import com.ayushtech.wordwave.game.CrosswordGameHandler;
 import com.ayushtech.wordwave.util.MetricService;
+import com.ayushtech.wordwave.util.UtilService;
 
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -84,9 +87,26 @@ public class MainListener extends ListenerAdapter {
 			return;
 		}
 		
-		if (buttonId.startsWith("extraWords")) {
+		else if (buttonId.startsWith("extraWords")) {
 			CrosswordGameHandler.getInstance().handleExtraWordButton(event);
 			return;
 		}
+		
+		else if (buttonId.startsWith("claimExtraWords")) {
+			UtilService.getInstance().claimExtraWordCoins(event);
+			return;
+		}
+		
+	
+	}
+	
+	@Override
+	public void onGuildJoin(GuildJoinEvent event) {
+		UtilService.getInstance().notifyGuildJoin(event);
+	}
+	
+	@Override
+	public void onGuildLeave(GuildLeaveEvent event) {
+		UtilService.getInstance().notifyGuildLeave(event);
 	}
 }

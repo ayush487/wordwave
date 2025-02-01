@@ -62,6 +62,32 @@ public class LevelsDao {
 		return null;
 	}
 
+	public int getUserBalance(long userId) {
+		Connection conn = ConnectionProvider.getConnection();
+		try {
+			var stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery("SELECT coins FROM users where id=" + userId + ";");
+			if (rs.next()) {
+				return rs.getInt("coins");
+			}
+			return 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
+	public void deductUserBalance(long userId, int coins) {
+		Connection conn = ConnectionProvider.getConnection();
+		try {
+			var stmt = conn.createStatement();
+			stmt.executeUpdate(
+					String.format("UPDATE users SET coins = coins - %d FROM users where id=%d;", coins, userId));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public int getExtraWordsNumber(long userId) {
 		Connection conn = ConnectionProvider.getConnection();
 		try {
@@ -78,11 +104,12 @@ public class LevelsDao {
 		return 0;
 	}
 
-	public void incrementExtraWord(long userId) {
+	public void updateExtraWordCount(long userId, int count, boolean increment) {
 		Connection conn = ConnectionProvider.getConnection();
 		try {
 			var stmt = conn.createStatement();
-			stmt.executeUpdate(String.format("UPDATE users SET extra_words = extra_words + 1 WHERE id=%d;", userId));
+			stmt.executeUpdate(String.format("UPDATE users SET extra_words = extra_words %s %d WHERE id=%d;",
+					increment ? "+" : "-", count, userId));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -92,11 +119,8 @@ public class LevelsDao {
 		Connection conn = ConnectionProvider.getConnection();
 		try {
 			Statement stmt = conn.createStatement();
-			stmt.executeUpdate(String.format("""
-					update users set extra_words=0,
-					coins = coins + 25
-					where id=%d and coins >= 25;
-					""", userId));
+			stmt.executeUpdate(String.format(
+					"UPDATE users set extra_words=0, coins = coins + 25 WHERE id=%d and extra_words >= 25;", userId));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

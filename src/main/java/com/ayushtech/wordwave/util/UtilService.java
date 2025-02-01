@@ -1,9 +1,20 @@
 package com.ayushtech.wordwave.util;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.ayushtech.wordwave.dbconnectivity.LevelsDao;
+
 import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
+import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 public class UtilService {
 
@@ -20,6 +31,7 @@ public class UtilService {
 	private final String bar3empty = Emoji.fromCustom("bar3empty", 1195298974429618207l, false).getAsMention();
 	private final String bar3half = Emoji.fromCustom("bar3half", 1195299147499192362l, true).getAsMention();
 	private final String bar3full = Emoji.fromCustom("bar3full", 1195299364759941131l, true).getAsMention();
+	private String guildEventWebhookUrl = "";
 
 	private UtilService() {
 		this.emojiMap = new HashMap<Character, String>();
@@ -32,54 +44,89 @@ public class UtilService {
 		}
 		return instance;
 	}
+	
+	public void claimExtraWordCoins(ButtonInteractionEvent event) {
+		event.editButton(Button.success("claimed", "Claimed").asDisabled()).queue();
+		long userId = event.getUser().getIdLong();
+		LevelsDao.getInstance().claimCoinsWithExtraWords(userId);
+		event.getHook().sendMessage("25 :coin: added to your balance").setEphemeral(true).queue();
+	}
 
 	public String getEmoji(char c) {
 		return this.emojiMap.get(c);
 	}
-	
+
+	public void notifyGuildJoin(GuildJoinEvent event) {
+		String guildName = event.getGuild().getName();
+		String msg = String.format("Wordwave:capital_abcd: joined server - %s", guildName);
+		sendMessageToWebhook(guildEventWebhookUrl, msg);
+	}
+
+	public void notifyGuildLeave(GuildLeaveEvent event) {
+		String guildName = event.getGuild().getName();
+		String msg = String.format("Wordwave:capital_abcd: leaved server - %s", guildName);
+		sendMessageToWebhook(guildEventWebhookUrl, msg);
+	}
+
+	public void setGuildEventWebhookUrl(String url) {
+		this.guildEventWebhookUrl = url;
+	}
+
 	public String getProgressBar(int fill) {
-	    int progressBarFillAmount = Math.round(fill / 10.0f) * 10;
-	    String progressBar;
-	    switch (progressBarFillAmount) {
-	      case 0:
-	        progressBar = bar1empty + bar2empty + bar2empty + bar2empty + bar3empty;
-	        break;
-	      case 10:
-	        progressBar = bar1half + bar2empty + bar2empty + bar2empty + bar3empty;
-	        break;
-	      case 20:
-	        progressBar = bar1full + bar2empty + bar2empty + bar2empty + bar3empty;
-	        break;
-	      case 30:
-	        progressBar = bar1max + bar2half + bar2empty + bar2empty + bar3empty;
-	        break;
-	      case 40:
-	        progressBar = bar1max + bar2full + bar2empty + bar2empty + bar3empty;
-	        break;
-	      case 50:
-	        progressBar = bar1max + bar2max + bar2half + bar2empty + bar3empty;
-	        break;
-	      case 60:
-	        progressBar = bar1max + bar2max + bar2full + bar2empty + bar3empty;
-	        break;
-	      case 70:
-	        progressBar = bar1max + bar2max + bar2max + bar2half + bar3empty;
-	        break;
-	      case 80:
-	        progressBar = bar1max + bar2max + bar2max + bar2full + bar3empty;
-	        break;
-	      case 90:
-	        progressBar = bar1max + bar2max + bar2max + bar2max + bar3half;
-	        break;
-	      case 100:
-	        progressBar = bar1max + bar2max + bar2max + bar2max + bar3full;
-	        break;
-	      default:
-	        progressBar = bar1empty + bar2empty + bar2empty + bar2empty + bar3empty;
-	        break;
-	    }
-	    return progressBar;
-	  }
+		int progressBarFillAmount = Math.round(fill / 10.0f) * 10;
+		String progressBar;
+		switch (progressBarFillAmount) {
+		case 0:
+			progressBar = bar1empty + bar2empty + bar2empty + bar2empty + bar3empty;
+			break;
+		case 10:
+			progressBar = bar1half + bar2empty + bar2empty + bar2empty + bar3empty;
+			break;
+		case 20:
+			progressBar = bar1full + bar2empty + bar2empty + bar2empty + bar3empty;
+			break;
+		case 30:
+			progressBar = bar1max + bar2half + bar2empty + bar2empty + bar3empty;
+			break;
+		case 40:
+			progressBar = bar1max + bar2full + bar2empty + bar2empty + bar3empty;
+			break;
+		case 50:
+			progressBar = bar1max + bar2max + bar2half + bar2empty + bar3empty;
+			break;
+		case 60:
+			progressBar = bar1max + bar2max + bar2full + bar2empty + bar3empty;
+			break;
+		case 70:
+			progressBar = bar1max + bar2max + bar2max + bar2half + bar3empty;
+			break;
+		case 80:
+			progressBar = bar1max + bar2max + bar2max + bar2full + bar3empty;
+			break;
+		case 90:
+			progressBar = bar1max + bar2max + bar2max + bar2max + bar3half;
+			break;
+		case 100:
+			progressBar = bar1max + bar2max + bar2max + bar2max + bar3full;
+			break;
+		default:
+			progressBar = bar1empty + bar2empty + bar2empty + bar2empty + bar3empty;
+			break;
+		}
+		return progressBar;
+	}
+
+	private void sendMessageToWebhook(String url, String message) {
+		OkHttpClient client = new OkHttpClient();
+		String jsonInputString = String.format("{\"content\" : \"%s\"}", message);
+		RequestBody body = RequestBody.create(jsonInputString, MediaType.parse("application/json; charset=utf-8"));
+		Request request = new Request.Builder().url(url).post(body).build();
+		try {
+			client.newCall(request).execute();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
 	private void setEmojis() {
 		this.emojiMap.put('a', ":regional_indicator_a:");
