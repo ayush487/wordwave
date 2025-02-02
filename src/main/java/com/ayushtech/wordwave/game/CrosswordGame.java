@@ -115,7 +115,11 @@ public class CrosswordGame {
 		eb.setTitle(String.format("Level %d", levelNumber));
 		eb.setDescription(getGridFormated());
 		eb.setColor(Color.yellow);
-		eb.addField("__Allowed Letters__", this.currentLevel.getAllowedLetters(), false);
+		StringBuilder sb = new StringBuilder(currentLevel.getAllowedLetters());
+		sb.append(String.format("\nMinimum Word Size : `%d`", currentLevel.getMinWordSize()));
+		sb.append(String.format("\nMaximum Word Size : `%d`", currentLevel.getMaxWordSize()));
+
+		eb.addField("__Allowed Letters__", sb.toString(), false);
 		this.channel.editMessageEmbedsById(messageId, eb.build()).queue();
 	}
 
@@ -135,11 +139,11 @@ public class CrosswordGame {
 		List<CrosswordPointer> emptyPositionList = new ArrayList<CrosswordPointer>();
 		for (int i = 0; i < currentLevel.getColumns(); i++) {
 			for (int j = 0; j < currentLevel.getRows(); j++) {
-				if (currentLevel.getGridUnsolved()[i][j] == '-')
+				if (currentLevel.getGridUnsolved()[i][j] == '+')
 					emptyPositionList.add(new CrosswordPointer(i, j));
 			}
 		}
-		if (emptyPositionList.size()==0) {
+		if (emptyPositionList.size() == 0) {
 			return false;
 		} else {
 			var pointer = emptyPositionList.get(random.nextInt(emptyPositionList.size()));
