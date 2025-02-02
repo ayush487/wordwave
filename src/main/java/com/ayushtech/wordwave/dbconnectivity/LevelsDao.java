@@ -81,8 +81,7 @@ public class LevelsDao {
 		Connection conn = ConnectionProvider.getConnection();
 		try {
 			var stmt = conn.createStatement();
-			stmt.executeUpdate(
-					String.format("UPDATE users SET coins = coins - %d where id=%d;", coins, userId));
+			stmt.executeUpdate(String.format("UPDATE users SET coins = coins - %d where id=%d;", coins, userId));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

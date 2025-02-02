@@ -1,6 +1,7 @@
 package com.ayushtech.wordwave.listeners;
 
 import com.ayushtech.wordwave.game.CrosswordGameHandler;
+import com.ayushtech.wordwave.util.ChannelService;
 import com.ayushtech.wordwave.util.MetricService;
 import com.ayushtech.wordwave.util.UtilService;
 
@@ -13,9 +14,16 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
 public class MainListener extends ListenerAdapter {
 
+	private ChannelService channelService;
+
+	public MainListener() {
+		super();
+		channelService = ChannelService.getInstance();
+	}
+
 	@Override
 	public void onMessageReceived(MessageReceivedEvent event) {
-		if (event.getAuthor().isBot()) {
+		if (event.getAuthor().isBot() || channelService.isChannelDisabled(event.getChannel().getIdLong())) {
 			return;
 		}
 		String message = event.getMessage().getContentRaw();
@@ -30,7 +38,7 @@ public class MainListener extends ListenerAdapter {
 			CrosswordGameHandler.getInstance().handleCrosswordTextCommand(event);
 			return;
 		}
-		
+
 	}
 
 	@Override
@@ -39,15 +47,23 @@ public class MainListener extends ListenerAdapter {
 		String commandName = event.getName();
 
 		if (commandName.equals("enable")) {
-			event.reply("This command is not ready yet!").setEphemeral(true).queue();
+			channelService.handleEnableCommand(event);
+			return;
 		}
 
 		else if (commandName.equals("disable")) {
-			event.reply("This command is not ready yet!").setEphemeral(true).queue();
+			channelService.handleDisableCommand(event);
+			return;
 		}
 
 		else if (commandName.equals("disable_all_channels")) {
-			event.reply("This command is not ready yet!").setEphemeral(true).queue();
+			channelService.handleDisableAllCommand(event);
+			return;
+		}
+		
+		if(channelService.isChannelDisabled(event.getChannelIdLong())) {
+			event.reply("Commands in this channel is disabled!").setEphemeral(true).queue();
+			return;
 		}
 
 		else if (commandName.equals("crossword")) {
@@ -86,25 +102,24 @@ public class MainListener extends ListenerAdapter {
 			CrosswordGameHandler.getInstance().handleShuffleButton(event);
 			return;
 		}
-		
+
 		else if (buttonId.startsWith("extraWords")) {
 			CrosswordGameHandler.getInstance().handleExtraWordButton(event);
 			return;
 		}
-		
+
 		else if (buttonId.startsWith("claimExtraWords")) {
 			UtilService.getInstance().claimExtraWordCoins(event);
 			return;
 		}
-		
-	
+
 	}
-	
+
 	@Override
 	public void onGuildJoin(GuildJoinEvent event) {
 		UtilService.getInstance().notifyGuildJoin(event);
 	}
-	
+
 	@Override
 	public void onGuildLeave(GuildLeaveEvent event) {
 		UtilService.getInstance().notifyGuildLeave(event);
