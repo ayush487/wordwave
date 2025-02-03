@@ -24,6 +24,7 @@ public class CrosswordGame {
 	private long userId;
 	private final int asciA = 97;
 	private final int levelNumber;
+	private boolean usedHint;
 	private final Level currentLevel;
 	private long messageId;
 	private final MessageChannel channel;
@@ -36,6 +37,7 @@ public class CrosswordGame {
 		this.levelNumber = level.getLevel();
 		this.channel = channel;
 		this.currentLevel = level;
+		this.usedHint = false;
 		this.enterredWords = new HashSet<String>();
 		this.extraWords = new ArrayList<String>();
 		for (char c : level.getAllowedLetterList()) {
@@ -49,12 +51,11 @@ public class CrosswordGame {
 		sb.append(String.format("\nMinimum Word Size : `%d`", level.getMinWordSize()));
 		sb.append(String.format("\nMaximum Word Size : `%d`", level.getMaxWordSize()));
 		eb.addField("__Allowed Letters__", sb.toString(), false);
-
 		this.channel.sendMessageEmbeds(eb.build())
 				.addActionRow(
 						Button.primary("shuffleCrossword_" + userId,
 								Emoji.fromFormatted("<:refresh:1209076086185656340>")),
-						Button.primary("hintCrossword_" + userId, "💡 (100 🪙)"))
+						Button.primary("hintCrossword_" + userId, "💡 (Free)"))
 				.addActionRow(Button.danger("quitCrossword_" + userId, "Quit"),
 						Button.primary("extraWords", "Extra Words"))
 				.queue(message -> this.messageId = message.getIdLong());
@@ -149,6 +150,7 @@ public class CrosswordGame {
 			var pointer = emptyPositionList.get(random.nextInt(emptyPositionList.size()));
 			currentLevel.unlockLetter(pointer.i(), pointer.j());
 			updateEmbed();
+			usedHint = true;
 			return true;
 		}
 	}
@@ -216,5 +218,9 @@ public class CrosswordGame {
 
 	public List<String> getExtraWords() {
 		return this.extraWords;
+	}
+	
+	public boolean hasUsedHint() {
+		return this.usedHint;
 	}
 }

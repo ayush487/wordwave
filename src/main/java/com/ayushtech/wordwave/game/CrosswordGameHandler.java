@@ -143,19 +143,31 @@ public class CrosswordGameHandler {
 			return;
 		}
 		event.deferEdit().queue();
-		int userBalance = LevelsDao.getInstance().getUserBalance(event.getUser().getIdLong());
-		if (userBalance < 100) {
-			event.getHook().sendMessage("You dont have enough balance to use hint!").setEphemeral(true).queue();
-			return;
-		}
 		var game = gameMap.get(event.getUser().getIdLong());
-		if (game.activateHint()) {
-			CompletableFuture.runAsync(() -> {
-				LevelsDao.getInstance().deductUserBalance(event.getUser().getIdLong(), 100);
-			});
-		} else {
-			event.getHook().sendMessage("No empty space left for hint").setEphemeral(true).queue();
+//		Has Used the Free Hint ?
+		if (game.hasUsedHint()) {
+			int userBalance = LevelsDao.getInstance().getUserBalance(event.getUser().getIdLong());
+			if (userBalance < 100) {
+				event.getHook().sendMessage("You dont have enough balance to use hint!").setEphemeral(true).queue();
+				return;
+			}
+			if (game.activateHint()) {
+				CompletableFuture.runAsync(() -> {
+					LevelsDao.getInstance().deductUserBalance(event.getUser().getIdLong(), 100);
+				});
+			} else {
+				event.getHook().sendMessage("No empty space left for hint").setEphemeral(true).queue();
+			}
 		}
+//		didn't used free hint yet
+		else {
+			if (game.activateHint()) {
+				event.editButton(Button.primary(event.getComponentId(), "💡 (100 🪙)")).queue();
+			} else {
+				event.getHook().sendMessage("No empty space left for hint").setEphemeral(true).queue();
+			}
+		}
+
 	}
 
 	public void handleShuffleButton(ButtonInteractionEvent event) {
