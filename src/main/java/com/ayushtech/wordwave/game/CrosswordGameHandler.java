@@ -74,7 +74,6 @@ public class CrosswordGameHandler {
 		} catch (SQLException e) {
 			event.getChannel().sendMessage("Something went wrong!\nPlease try again").queue();
 		}
-
 	}
 
 	public void handleCrosswordButton(ButtonInteractionEvent event) {
@@ -144,7 +143,6 @@ public class CrosswordGameHandler {
 		}
 		event.deferEdit().queue();
 		var game = gameMap.get(event.getUser().getIdLong());
-//		Has Used the Free Hint ?
 		if (game.hasUsedHint()) {
 			int userBalance = LevelsDao.getInstance().getUserBalance(event.getUser().getIdLong());
 			if (userBalance < 100) {
@@ -158,9 +156,7 @@ public class CrosswordGameHandler {
 			} else {
 				event.getHook().sendMessage("No empty space left for hint").setEphemeral(true).queue();
 			}
-		}
-//		didn't used free hint yet
-		else {
+		} else {
 			if (game.activateHint()) {
 				event.editButton(Button.primary(event.getComponentId(), "💡 (100 🪙)")).queue();
 			} else {
@@ -257,6 +253,11 @@ public class CrosswordGameHandler {
 				}
 			}
 		}
+	}
+
+	public void removeGame(long userId) {
+		if (gameMap.containsKey(userId))
+			gameMap.remove(userId);
 	}
 
 	public boolean isActiveGame(long userId, long channelId) {

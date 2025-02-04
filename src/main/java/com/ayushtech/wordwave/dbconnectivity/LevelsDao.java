@@ -33,8 +33,8 @@ public class LevelsDao {
 		ResultSet rs = stmt.executeQuery(
 				"SELECT * FROM levels JOIN users ON levels.level=users.level WHERE users.id=" + userId + ";");
 		if (rs.next()) {
-			return new Level(rs.getInt("level"), rs.getInt("rows"), rs.getInt("columns"), rs.getString("main_word"),
-					rs.getString("words"), rs.getString("level_data"));
+			return new Level(rs.getInt("level"), rs.getString("main_word"), rs.getString("words"),
+					rs.getString("level_data"));
 		}
 		return null;
 	}

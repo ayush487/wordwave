@@ -11,6 +11,7 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
 public class MainListener extends ListenerAdapter {
 
@@ -60,8 +61,8 @@ public class MainListener extends ListenerAdapter {
 			channelService.handleDisableAllCommand(event);
 			return;
 		}
-		
-		if(channelService.isChannelDisabled(event.getChannelIdLong())) {
+
+		if (channelService.isChannelDisabled(event.getChannelIdLong())) {
 			event.reply("Commands in this channel is disabled!").setEphemeral(true).queue();
 			return;
 		}
@@ -69,6 +70,28 @@ public class MainListener extends ListenerAdapter {
 		else if (commandName.equals("crossword")) {
 			CrosswordGameHandler.getInstance().handleCrosswordSlashCommand(event);
 			return;
+		}
+
+		else if (commandName.equals("botinfo")) {
+			event.deferReply().queue();
+			String subcommandName = event.getSubcommandName();
+			if (subcommandName.equals("gc")) {
+				Runtime.getRuntime().gc();
+				event.getHook().sendMessage("Requested for Garbage Collection").queue();
+				return;
+			} else if (subcommandName.equals("memory")) {
+				long totalMemory = Runtime.getRuntime().totalMemory();
+				long freeMemory = Runtime.getRuntime().freeMemory();
+				long usedMemory = totalMemory - freeMemory;
+				event.getHook()
+						.sendMessage(String.format(
+								"Memory Used : %d\nAvailable Free Memory: %d MB\nTotal Memory in JVM : %d MB",
+								usedMemory / (1024 * 1024), freeMemory / (1024 * 1024), totalMemory / (1024 * 1024)))
+						.queue();
+				return;
+			} else {
+				event.getHook().sendMessage("This is not available yet!").queue();
+			}
 		}
 	}
 

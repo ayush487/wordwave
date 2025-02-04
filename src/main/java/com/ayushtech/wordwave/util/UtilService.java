@@ -155,7 +155,7 @@ public class UtilService {
 		this.emojiMap.put('x', ":regional_indicator_x:");
 		this.emojiMap.put('y', ":regional_indicator_y:");
 		this.emojiMap.put('z', ":regional_indicator_z:");
-		this.emojiMap.put('-', "<:blank:1223533175960109106>");
+		this.emojiMap.put('-', "‎:black_large_square:");
 		this.emojiMap.put('+', ":white_medium_square:");
 		this.emojiMap.put('A', "<:a_:1333904071349899334>");
 		this.emojiMap.put('B', "<:b_:1333904093084913694>");

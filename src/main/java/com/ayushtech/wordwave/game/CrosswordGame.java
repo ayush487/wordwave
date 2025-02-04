@@ -1,6 +1,7 @@
 package com.ayushtech.wordwave.game;
 
 import java.awt.Color;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -140,8 +141,9 @@ public class CrosswordGame {
 		List<CrosswordPointer> emptyPositionList = new ArrayList<CrosswordPointer>();
 		for (int i = 0; i < currentLevel.getColumns(); i++) {
 			for (int j = 0; j < currentLevel.getRows(); j++) {
-				if (currentLevel.getGridUnsolved()[i][j] == '+')
+				if (currentLevel.getGridUnsolved()[i][j] == '+') {
 					emptyPositionList.add(new CrosswordPointer(i, j));
+				}
 			}
 		}
 		if (emptyPositionList.size() == 0) {
@@ -151,25 +153,17 @@ public class CrosswordGame {
 			currentLevel.unlockLetter(pointer.i(), pointer.j());
 			updateEmbed();
 			usedHint = true;
+			checkIfWordCompleted();
 			return true;
 		}
 	}
 
-//	private boolean isLastLetterRemaining() {
-//		int remainingLetters = 0;
-//		for (char[] cols : currentLevel.getGridUnsolved()) {
-//			for (char c : cols) {
-//				if (c == '+')
-//					remainingLetters++;
-//			}
-//		}
-//		return remainingLetters <= 1;
-//	}
-
 	public CorrectWordResponse checkWord(String word) {
 		var res = currentLevel.checkWord(word);
-		if (res.isCorrect())
+		if (res.isCorrect()) {
 			enterredWords.add(word);
+			checkIfWordCompleted();
+		}
 		return res;
 	}
 
@@ -187,7 +181,11 @@ public class CrosswordGame {
 		eb.setTitle(String.format("Level %d", levelNumber));
 		eb.setDescription(getGridFormated());
 		eb.setColor(Color.yellow);
-		eb.addField("__Allowed Letters__", currentLevel.getAllowedLetters(), false);
+		StringBuilder sb = new StringBuilder(currentLevel.getAllowedLetters());
+		sb.append(String.format("\nMinimum Word Size : `%d`", currentLevel.getMinWordSize()));
+		sb.append(String.format("\nMaximum Word Size : `%d`", currentLevel.getMaxWordSize()));
+
+		eb.addField("__Allowed Letters__", sb.toString(), false);
 		event.editMessageEmbeds(eb.build()).queue();
 	}
 
@@ -216,10 +214,26 @@ public class CrosswordGame {
 		return true;
 	}
 
+	private void checkIfWordCompleted() {
+		CompletableFuture.runAsync(() -> {
+			boolean isLevelCompleted = currentLevel.checkExtraWordCompletion();
+			if (isLevelCompleted) {
+				CrosswordGameHandler.getInstance().removeGame(userId);
+				completeThisLevel();
+				this.channel.sendMessage("You completed Level " + levelNumber + " :tada:")
+						.addActionRow(Button.primary("newCrossword_" + userId, "Play Next Level")).queue();
+				try {
+					LevelsDao.getInstance().promoteUserLevel(userId, levelNumber);
+				} catch (SQLException e) {
+				}
+			}
+		});
+	}
+
 	public List<String> getExtraWords() {
 		return this.extraWords;
 	}
-	
+
 	public boolean hasUsedHint() {
 		return this.usedHint;
 	}

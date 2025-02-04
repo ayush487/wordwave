@@ -21,10 +21,8 @@ public class Level {
 	private int min_word_size;
 	private int max_word_size;
 
-	public Level(int level, int rows, int columns, String main_word, String words_combined, String level_data) {
+	public Level(int level, String main_word, String words_combined, String level_data) {
 		this.level = level;
-		this.rows = rows;
-		this.columns = columns;
 		this.max_word_size = main_word.length();
 		allowed_letters = main_word.chars().mapToObj(c -> (char) c).collect(Collectors.toList());
 		Collections.shuffle(allowed_letters);
@@ -37,7 +35,7 @@ public class Level {
 				this.min_word_size = w.length();
 			}
 		}
-		extractLevels(level_data, rows, columns);
+		extractLevels(level_data);
 		setupExtra();
 	}
 
@@ -58,10 +56,12 @@ public class Level {
 		}
 	}
 
-	private void extractLevels(String levelData, int rows, int columns) {
+	private void extractLevels(String levelData) {
+		this.across_string = levelData.split(":");
+		this.rows = across_string[0].length();
+		this.columns = across_string.length;
 		this.grid_solved = new char[columns][rows];
 		this.grid_unsolved = new char[columns][rows];
-		this.across_string = levelData.split(":");
 		for (int i = 0; i < columns; i++) {
 			for (int j = 0; j < rows; j++) {
 				this.grid_solved[i][j] = across_string[i].charAt(j);
@@ -112,6 +112,42 @@ public class Level {
 		} else {
 			return new CorrectWordResponse(false, "", false, 0, 0, false);
 		}
+	}
+	
+	public boolean checkExtraWordCompletion() {
+		if (words.size()==0) {
+			return false;
+		}
+		String[] across_temp = new String[columns];
+		String[] down_temp = new String[rows];
+		for(int i=0;i<columns;i++) {
+			StringBuilder sb = new StringBuilder();
+			for (int j=0;j<rows;j++) {
+				sb.append(Character.toLowerCase(grid_unsolved[i][j]));
+			}
+			across_temp[i] = sb.toString();
+		}
+		for (int j=0;j<rows;j++) {
+			StringBuilder sb = new StringBuilder();
+			for (int i=0;i<columns;i++) {
+				sb.append(Character.toLowerCase(grid_unsolved[i][j]));
+			}
+			down_temp[j] = sb.toString();
+		}
+		for (String w : words) {
+			Pattern p = Pattern.compile(String.format("\\b%s\\b", w));
+			for (String a : across_temp) {
+				var matcher = p.matcher(a);
+				if(matcher.find()) {
+					words.remove(w);
+					break;
+				}
+			}
+			if (words.size()==0) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public void shuffleAllowedLetters() {
