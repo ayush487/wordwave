@@ -119,7 +119,7 @@ public class LevelsDao {
 		try {
 			Statement stmt = conn.createStatement();
 			stmt.executeUpdate(String.format(
-					"UPDATE users set extra_words=0, coins = coins + 25 WHERE id=%d and extra_words >= 25;", userId));
+					"UPDATE users set extra_words=0, coins = coins + 100 WHERE id=%d and extra_words >= 25;", userId));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

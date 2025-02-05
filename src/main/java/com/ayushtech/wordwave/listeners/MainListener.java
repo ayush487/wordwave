@@ -3,6 +3,7 @@ package com.ayushtech.wordwave.listeners;
 import com.ayushtech.wordwave.game.CrosswordGameHandler;
 import com.ayushtech.wordwave.util.ChannelService;
 import com.ayushtech.wordwave.util.MetricService;
+import com.ayushtech.wordwave.util.UserService;
 import com.ayushtech.wordwave.util.UtilService;
 
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
@@ -11,7 +12,6 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.commands.build.SubcommandData;
 
 public class MainListener extends ListenerAdapter {
 
@@ -67,7 +67,7 @@ public class MainListener extends ListenerAdapter {
 			return;
 		}
 
-		else if (commandName.equals("crossword")) {
+		if (commandName.equals("crossword")) {
 			CrosswordGameHandler.getInstance().handleCrosswordSlashCommand(event);
 			return;
 		}
@@ -132,7 +132,12 @@ public class MainListener extends ListenerAdapter {
 		}
 
 		else if (buttonId.startsWith("claimExtraWords")) {
-			UtilService.getInstance().claimExtraWordCoins(event);
+			UserService.getInstance().claimExtraWordCoins(event);
+			return;
+		}
+		
+		else if (buttonId.startsWith("cancelThenNewCrossword")) {
+			CrosswordGameHandler.getInstance().handleCancelThenNewCrosswordButton(event);
 			return;
 		}
 

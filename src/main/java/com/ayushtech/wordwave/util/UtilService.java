@@ -4,13 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.ayushtech.wordwave.dbconnectivity.LevelsDao;
-
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
-import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
-import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -43,13 +39,6 @@ public class UtilService {
 			instance = new UtilService();
 		}
 		return instance;
-	}
-
-	public void claimExtraWordCoins(ButtonInteractionEvent event) {
-		event.editButton(Button.success("claimed", "Claimed").asDisabled()).queue();
-		long userId = event.getUser().getIdLong();
-		LevelsDao.getInstance().claimCoinsWithExtraWords(userId);
-		event.getHook().sendMessage("25 :coin: added to your balance").setEphemeral(true).queue();
 	}
 
 	public String getEmoji(char c) {

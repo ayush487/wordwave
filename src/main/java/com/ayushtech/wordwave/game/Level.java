@@ -26,7 +26,7 @@ public class Level {
 		this.max_word_size = main_word.length();
 		allowed_letters = main_word.chars().mapToObj(c -> (char) c).collect(Collectors.toList());
 		Collections.shuffle(allowed_letters);
-		this.words = new HashSet<String>();
+		this.words = new HashSet<>();
 		String[] words_array = words_combined.split(",");
 		this.min_word_size = words_array[0].length();
 		for (String w : words_array) {
@@ -113,43 +113,57 @@ public class Level {
 			return new CorrectWordResponse(false, "", false, 0, 0, false);
 		}
 	}
-	
+
 	public boolean checkExtraWordCompletion() {
-		if (words.size()==0) {
+		if (words.isEmpty()) {
 			return false;
 		}
 		String[] across_temp = new String[columns];
 		String[] down_temp = new String[rows];
-		for(int i=0;i<columns;i++) {
+		for (int i = 0; i < columns; i++) {
 			StringBuilder sb = new StringBuilder();
-			for (int j=0;j<rows;j++) {
+			for (int j = 0; j < rows; j++) {
 				sb.append(Character.toLowerCase(grid_unsolved[i][j]));
 			}
 			across_temp[i] = sb.toString();
 		}
-		for (int j=0;j<rows;j++) {
+		for (int j = 0; j < rows; j++) {
 			StringBuilder sb = new StringBuilder();
-			for (int i=0;i<columns;i++) {
+			for (int i = 0; i < columns; i++) {
 				sb.append(Character.toLowerCase(grid_unsolved[i][j]));
 			}
 			down_temp[j] = sb.toString();
 		}
 		for (String w : words) {
-			Pattern p = Pattern.compile(String.format("\\b%s\\b", w));
+			Pattern p = Pattern.compile(String.format("(?<![a-zA-Z+])%s(?![a-zA-Z+])", w));
+			boolean isFound = false;
 			for (String a : across_temp) {
 				var matcher = p.matcher(a);
-				if(matcher.find()) {
+				if (matcher.find()) {
+					isFound = true;
 					words.remove(w);
+					if (words.isEmpty()) {
+						return true;
+					}
 					break;
 				}
 			}
-			if (words.size()==0) {
-				return true;
+			if (!isFound) {
+				for (String a : down_temp) {
+					var matcher = p.matcher(a);
+					if (matcher.find()) {
+						words.remove(w);
+						if (words.isEmpty()) {
+							return true;
+						}
+						break;
+					}
+				}
 			}
 		}
 		return false;
 	}
-	
+
 	public void shuffleAllowedLetters() {
 		Collections.shuffle(allowed_letters);
 	}
@@ -173,7 +187,7 @@ public class Level {
 	public int getRows() {
 		return this.rows;
 	}
-	
+
 	public void unlockLetter(int c, int r) {
 		grid_unsolved[c][r] = Character.toUpperCase(grid_solved[c][r]);
 	}
@@ -184,15 +198,15 @@ public class Level {
 		sb.append("**");
 		return sb.toString();
 	}
-	
+
 	public List<Character> getAllowedLetterList() {
 		return this.allowed_letters;
 	}
-	
+
 	public int getMinWordSize() {
 		return this.min_word_size;
 	}
-	
+
 	public int getMaxWordSize() {
 		return this.max_word_size;
 	}
