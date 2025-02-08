@@ -71,6 +71,16 @@ public class MainListener extends ListenerAdapter {
 			CrosswordGameHandler.getInstance().handleCrosswordSlashCommand(event);
 			return;
 		}
+		
+		else if (commandName.equals("balance")) {
+			UserService.getInstance().handleBalanceCommand(event);
+			return;
+		}
+		
+		else if (commandName.equals("daily")) {
+			UserService.getInstance().handleDailyCommand(event);
+			return;
+		}
 
 		else if (commandName.equals("botinfo")) {
 			event.deferReply().queue();

@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import com.ayushtech.wordwave.dbconnectivity.LevelsDao;
+import com.ayushtech.wordwave.dbconnectivity.UserDao;
 import com.ayushtech.wordwave.util.UtilService;
 
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -70,6 +71,7 @@ public class CrosswordGame {
 					.addActionRow(Button.primary("newCrossword_" + userId, "Play Next Level")).queue();
 		} else {
 			updateEmbed();
+			checkIfWordCompleted();
 		}
 	}
 
@@ -83,7 +85,7 @@ public class CrosswordGame {
 		event.editMessageEmbeds(eb.build()).setActionRow(Button.primary("newCrossword_" + userId, "Start New Game"))
 				.queue();
 		CompletableFuture.runAsync(() -> {
-			LevelsDao.getInstance().updateExtraWordCount(userId, extraWords.size(), false);
+			UserDao.getInstance().updateExtraWordCount(userId, extraWords.size(), false);
 		});
 	}
 
@@ -97,7 +99,7 @@ public class CrosswordGame {
 		this.channel.editMessageEmbedsById(messageId, eb.build())
 				.setActionRow(Button.danger("cancelled", "Cancelled").asDisabled()).queue();
 		CompletableFuture.runAsync(() -> {
-			LevelsDao.getInstance().updateExtraWordCount(userId, extraWords.size(), false);
+			UserDao.getInstance().updateExtraWordCount(userId, extraWords.size(), false);
 		});
 	}
 
@@ -162,7 +164,6 @@ public class CrosswordGame {
 		var res = currentLevel.checkWord(word);
 		if (res.isCorrect()) {
 			enterredWords.add(word);
-			checkIfWordCompleted();
 		}
 		return res;
 	}

@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import com.ayushtech.wordwave.dbconnectivity.LevelsDao;
+import com.ayushtech.wordwave.dbconnectivity.UserDao;
 import com.ayushtech.wordwave.util.UtilService;
 
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -25,6 +26,7 @@ public class CrosswordGameHandler {
 
 	private Map<Long, CrosswordGame> gameMap = new HashMap<>();
 	private Set<String> allWordList;
+	private final int CROSSWORD_DURATION = 20;
 
 	private CrosswordGameHandler() {
 		allWordList = LevelsDao.getInstance().getAllWords();
@@ -51,7 +53,7 @@ public class CrosswordGameHandler {
 			var level = LevelsDao.getInstance().getUserCurrentLevel(userId);
 			var game = new CrosswordGame(userId, level, event.getChannel());
 			gameMap.put(userId, game);
-			CompletableFuture.delayedExecutor(10, TimeUnit.MINUTES).execute(() -> {
+			CompletableFuture.delayedExecutor(CROSSWORD_DURATION, TimeUnit.MINUTES).execute(() -> {
 				if (!gameMap.containsKey(userId))
 					return;
 				int gameHashCode = game.hashCode();
@@ -81,7 +83,7 @@ public class CrosswordGameHandler {
 			var level = LevelsDao.getInstance().getUserCurrentLevel(authorId);
 			CrosswordGame game = new CrosswordGame(authorId, level, event.getChannel());
 			gameMap.put(authorId, game);
-			CompletableFuture.delayedExecutor(10, TimeUnit.MINUTES).execute(() -> {
+			CompletableFuture.delayedExecutor(CROSSWORD_DURATION, TimeUnit.MINUTES).execute(() -> {
 				if (!gameMap.containsKey(authorId))
 					return;
 				int gameHashCode = game.hashCode();
@@ -116,7 +118,7 @@ public class CrosswordGameHandler {
 			Level userLevel = LevelsDao.getInstance().getUserCurrentLevel(userId);
 			var game = new CrosswordGame(userId, userLevel, event.getChannel());
 			gameMap.put(userId, game);
-			CompletableFuture.delayedExecutor(10, TimeUnit.MINUTES).execute(() -> {
+			CompletableFuture.delayedExecutor(CROSSWORD_DURATION, TimeUnit.MINUTES).execute(() -> {
 				if (!gameMap.containsKey(userId))
 					return;
 				int gameHashCode = game.hashCode();
@@ -205,14 +207,14 @@ public class CrosswordGameHandler {
 		event.deferEdit().queue();
 		var game = gameMap.get(event.getUser().getIdLong());
 		if (game.hasUsedHint()) {
-			int userBalance = LevelsDao.getInstance().getUserBalance(event.getUser().getIdLong());
+			int userBalance = UserDao.getInstance().getUserBalance(event.getUser().getIdLong());
 			if (userBalance < 100) {
 				event.getHook().sendMessage("You dont have enough balance to use hint!").setEphemeral(true).queue();
 				return;
 			}
 			if (game.activateHint()) {
 				CompletableFuture.runAsync(() -> {
-					LevelsDao.getInstance().deductUserBalance(event.getUser().getIdLong(), 100);
+					UserDao.getInstance().deductUserBalance(event.getUser().getIdLong(), 100);
 				});
 			} else {
 				event.getHook().sendMessage("No empty space left for hint").setEphemeral(true).queue();
@@ -240,7 +242,7 @@ public class CrosswordGameHandler {
 	public void handleExtraWordButton(ButtonInteractionEvent event) {
 		event.deferReply(true).queue();
 		long userId = event.getUser().getIdLong();
-		int extraWordCount = LevelsDao.getInstance().getExtraWordsNumber(userId);
+		int extraWordCount = UserDao.getInstance().getExtraWordsNumber(userId);
 		extraWordCount = extraWordCount > 25 ? 25 : extraWordCount;
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.setTitle("Extra Words");
@@ -307,7 +309,7 @@ public class CrosswordGameHandler {
 										.hasPermission(event.getGuildChannel(), Permission.MESSAGE_MANAGE)) {
 									event.getMessage().delete().queueAfter(10, TimeUnit.SECONDS);
 								}
-								LevelsDao.getInstance().updateExtraWordCount(authorId, 1, true);
+								UserDao.getInstance().updateExtraWordCount(authorId, 1, true);
 							}
 						}
 					});
