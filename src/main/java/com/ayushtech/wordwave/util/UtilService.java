@@ -1,12 +1,17 @@
 package com.ayushtech.wordwave.util;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.ayushtech.wordwave.dbconnectivity.UserDao;
+import com.ayushtech.wordwave.game.CrosswordGameHandler;
 
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -28,7 +33,9 @@ public class UtilService {
 	private final String bar3half = Emoji.fromCustom("bar3half", 1195299147499192362l, true).getAsMention();
 	private final String bar3full = Emoji.fromCustom("bar3full", 1195299364759941131l, true).getAsMention();
 	private String guildEventWebhookUrl = "";
-	
+	private String wordAdderWebhookUrl = "";
+	private String wordRemovedWebhookUrl = "";
+
 	private UtilService() {
 		this.emojiMap = new HashMap<Character, String>();
 		setEmojis();
@@ -41,8 +48,46 @@ public class UtilService {
 		return instance;
 	}
 
-	public String getEmoji(char c) {
-		return this.emojiMap.get(c);
+	public void handleAddWordCommand(SlashCommandInteractionEvent event) {
+		event.deferReply().queue();
+		String word = event.getOption("word").getAsString();
+		try {
+			boolean isAdded = UserDao.getInstance().addWord(word);
+			if (isAdded) {
+				CrosswordGameHandler.getInstance().addWordIntoWordSet(word);
+				event.getHook().sendMessage(String.format("**%s** added into database", word)).queue();
+				String webhookMessage = String.format("Word Added : **%s**     By : <@%s>", word,
+						event.getUser().getId());
+				sendMessageToWebhook(wordAdderWebhookUrl, webhookMessage);
+			} else {
+				event.getHook().sendMessage(String.format("**%s** already exist in database!", word)).queue();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			event.getHook().sendMessage("Something went wrong!").queue();
+			return;
+		}
+	}
+
+	public void handleRemoveWordCommand(SlashCommandInteractionEvent event) {
+		event.deferReply().queue();
+		String word = event.getOption("word").getAsString();
+		try {
+			boolean isRemoved = UserDao.getInstance().removeWord(word);
+			if (isRemoved) {
+				CrosswordGameHandler.getInstance().removeWordFromWordSet(word);
+				event.getHook().sendMessage(String.format("**%s** removed from database", word)).queue();
+				String webhookMessage = String.format("Word Removed : **%s**    By : <@%s>", word,
+						event.getUser().getId());
+				sendMessageToWebhook(wordRemovedWebhookUrl, webhookMessage);
+			} else {
+				event.getHook().sendMessage(String.format("**%s** is not in database", word)).queue();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			event.getHook().sendMessage("Something went wrong!").queue();
+			return;
+		}
 	}
 
 	public void notifyGuildJoin(GuildJoinEvent event) {
@@ -57,8 +102,20 @@ public class UtilService {
 		sendMessageToWebhook(guildEventWebhookUrl, msg);
 	}
 
-	public void setGuildEventWebhookUrl(String url) {
-		this.guildEventWebhookUrl = url;
+	private void sendMessageToWebhook(String url, String message) {
+		OkHttpClient client = new OkHttpClient();
+		String jsonInputString = String.format("{\"content\" : \"%s\"}", message);
+		RequestBody body = RequestBody.create(jsonInputString, MediaType.parse("application/json; charset=utf-8"));
+		Request request = new Request.Builder().url(url).post(body).build();
+		try {
+			client.newCall(request).execute();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public String getEmoji(char c) {
+		return this.emojiMap.get(c);
 	}
 
 	public String getProgressBar(int fill) {
@@ -103,18 +160,6 @@ public class UtilService {
 			break;
 		}
 		return progressBar;
-	}
-
-	private void sendMessageToWebhook(String url, String message) {
-		OkHttpClient client = new OkHttpClient();
-		String jsonInputString = String.format("{\"content\" : \"%s\"}", message);
-		RequestBody body = RequestBody.create(jsonInputString, MediaType.parse("application/json; charset=utf-8"));
-		Request request = new Request.Builder().url(url).post(body).build();
-		try {
-			client.newCall(request).execute();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 
 	private void setEmojis() {
@@ -172,6 +217,18 @@ public class UtilService {
 		this.emojiMap.put('X', "<:x_:1333904491912892506>");
 		this.emojiMap.put('Y', "<:y_:1333904505691177044>");
 		this.emojiMap.put('Z', "<:z_:1333904517216997398>");
+	}
+
+	public void setGuildEventWebhookUrl(String url) {
+		this.guildEventWebhookUrl = url;
+	}
+
+	public void setWordAdderWebhookUrl(String url) {
+		this.wordAdderWebhookUrl = url;
+	}
+
+	public void setWordRemovedWebhookUrl(String url) {
+		this.wordRemovedWebhookUrl = url;
 	}
 
 }

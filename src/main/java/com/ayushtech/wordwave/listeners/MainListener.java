@@ -71,25 +71,26 @@ public class MainListener extends ListenerAdapter {
 			CrosswordGameHandler.getInstance().handleCrosswordSlashCommand(event);
 			return;
 		}
-		
+
 		else if (commandName.equals("balance")) {
 			UserService.getInstance().handleBalanceCommand(event);
 			return;
 		}
-		
+
 		else if (commandName.equals("daily")) {
 			UserService.getInstance().handleDailyCommand(event);
 			return;
 		}
 
 		else if (commandName.equals("botinfo")) {
-			event.deferReply().queue();
 			String subcommandName = event.getSubcommandName();
 			if (subcommandName.equals("gc")) {
+				event.deferReply().queue();
 				Runtime.getRuntime().gc();
 				event.getHook().sendMessage("Requested for Garbage Collection").queue();
 				return;
 			} else if (subcommandName.equals("memory")) {
+				event.deferReply().queue();
 				long totalMemory = Runtime.getRuntime().totalMemory();
 				long freeMemory = Runtime.getRuntime().freeMemory();
 				long usedMemory = totalMemory - freeMemory;
@@ -100,8 +101,24 @@ public class MainListener extends ListenerAdapter {
 						.queue();
 				return;
 			} else {
-				event.getHook().sendMessage("This is not available yet!").queue();
+				MetricService.getInstance().handleMetricCommand(event);
+				return;
 			}
+		}
+
+		else if (commandName.equals("add_words")) {
+			UtilService.getInstance().handleAddWordCommand(event);
+			return;
+		}
+
+		else if (commandName.equals("remove_words")) {
+			UtilService.getInstance().handleRemoveWordCommand(event);
+			return;
+		}
+
+		else if (commandName.equals("extra_words")) {
+			CrosswordGameHandler.getInstance().handleExtraWordCommand(event);
+			return;
 		}
 	}
 
@@ -145,7 +162,7 @@ public class MainListener extends ListenerAdapter {
 			UserService.getInstance().claimExtraWordCoins(event);
 			return;
 		}
-		
+
 		else if (buttonId.startsWith("cancelThenNewCrossword")) {
 			CrosswordGameHandler.getInstance().handleCancelThenNewCrosswordButton(event);
 			return;

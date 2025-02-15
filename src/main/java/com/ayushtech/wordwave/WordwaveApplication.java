@@ -24,8 +24,12 @@ public class WordwaveApplication {
 		}
 		final String BOT_TOKEN = properties.getProperty("BOT_TOKEN");
 		final String guildEventWebhook = properties.getProperty("SERVER_EVENT_WEBHOOK");
+		final String wordAdderWebhook = properties.getProperty("WORD_ADDER_WEBHOOK");
+		final String wordRemoverWebhook = properties.getProperty("WORD_REMOVER_WEBHOOK");
 		
 		UtilService.getInstance().setGuildEventWebhookUrl(guildEventWebhook);
+		UtilService.getInstance().setWordAdderWebhookUrl(wordAdderWebhook);
+		UtilService.getInstance().setWordRemovedWebhookUrl(wordRemoverWebhook);
 		ChannelService.getInstance().loadDisabledChannels();
 
 //		DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(BOT_TOKEN,

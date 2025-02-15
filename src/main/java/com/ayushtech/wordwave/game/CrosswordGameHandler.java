@@ -239,6 +239,31 @@ public class CrosswordGameHandler {
 		game.shuffleAllowedLetters(event);
 	}
 
+	public void handleExtraWordCommand(SlashCommandInteractionEvent event) {
+//		TODO
+		event.deferReply().queue();
+		long userId = event.getUser().getIdLong();
+		int extraWordCount = UserDao.getInstance().getExtraWordsNumber(userId);
+		extraWordCount = extraWordCount > 25 ? 25 : extraWordCount;
+		EmbedBuilder eb = new EmbedBuilder();
+		eb.setTitle("Extra Words");
+		StringBuilder sb = new StringBuilder();
+		sb.append("Words : " + extraWordCount + "/25\n");
+		sb.append(UtilService.getInstance().getProgressBar(extraWordCount * 4));
+		eb.setDescription(sb.toString());
+		eb.setColor(Color.green);
+		if (gameMap.containsKey(userId)) {
+			var game = gameMap.get(userId);
+			StringBuilder wordlist = new StringBuilder("```\n");
+			game.getExtraWords().forEach(w -> wordlist.append(w + "\n"));
+			eb.addField("Current Level Extra Words", wordlist.append("```").toString(), false);
+		}
+		event.getHook().sendMessageEmbeds(eb.build())
+				.addActionRow(extraWordCount >= 25 ? Button.success("claimExtraWords_" + userId, "Claim")
+						: Button.success("claimExtraWords", "Claim").asDisabled())
+				.queue();
+	}
+
 	public void handleExtraWordButton(ButtonInteractionEvent event) {
 		event.deferReply(true).queue();
 		long userId = event.getUser().getIdLong();
@@ -258,7 +283,7 @@ public class CrosswordGameHandler {
 			eb.addField("Current Level Extra Words", wordlist.append("```").toString(), false);
 		}
 		event.getHook().sendMessageEmbeds(eb.build())
-				.addActionRow(extraWordCount >= 25 ? Button.success("claimExtraWords", "Claim")
+				.addActionRow(extraWordCount >= 25 ? Button.success("claimExtraWords_" + userId, "Claim")
 						: Button.success("claimExtraWords", "Claim").asDisabled())
 				.queue();
 	}
@@ -332,6 +357,14 @@ public class CrosswordGameHandler {
 			return false;
 		}
 		return false;
+	}
+	
+	public void removeWordFromWordSet(String word) {
+		allWordList.remove(word);
+	}
+	
+	public void addWordIntoWordSet(String word) {
+		allWordList.add(word);
 	}
 
 }

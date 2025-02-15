@@ -112,6 +112,29 @@ public class UserDao {
 			e.printStackTrace();
 			return Optional.empty();
 		}
+	}
+
+	public boolean addWord(String word) throws SQLException {
+		Connection conn = ConnectionProvider.getConnection();
+		var stmt = conn.createStatement();
+		var rs = stmt.executeQuery(String.format("Select * from wordlist where words='%s'", word));
+		if (rs.next()) {
+			return false;
+		}
+		stmt.executeUpdate(String.format("Insert INTO wordlist (words) values ('%s');", word));
+		return true;
+
+	}
+
+	public boolean removeWord(String word) throws SQLException {
+		Connection conn = ConnectionProvider.getConnection();
+		var stmt = conn.createStatement();
+		var rs = stmt.executeQuery(String.format("Select * from wordlist where words='%s'", word));
+		if (rs.next()) {
+			stmt.executeUpdate(String.format("Delete from wordlist where words='%s';", word));
+			return true;
+		}
+		return false;
 
 	}
 

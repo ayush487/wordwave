@@ -67,6 +67,11 @@ public class UserService {
 	}
 
 	public void claimExtraWordCoins(ButtonInteractionEvent event) {
+		String buttonOwnerId = event.getComponentId().split("_")[1];
+		if (!event.getUser().getId().equals(buttonOwnerId)) {
+			event.getHook().sendMessage("This button is not for you!").setEphemeral(true).queue();
+			return;
+		}
 		event.editButton(Button.success("claimed", "Claimed").asDisabled()).queue();
 		long userId = event.getUser().getIdLong();
 		UserDao.getInstance().claimCoinsWithExtraWords(userId);
