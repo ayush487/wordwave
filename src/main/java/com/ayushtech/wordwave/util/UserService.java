@@ -1,7 +1,6 @@
 package com.ayushtech.wordwave.util;
 
 import java.awt.Color;
-import java.util.Calendar;
 import java.util.Optional;
 
 import com.ayushtech.wordwave.dbconnectivity.UserDao;
@@ -47,7 +46,9 @@ public class UserService {
 			eb.setTitle("Daily Rewards");
 			eb.setDescription("100 :coin: is added to your account.");
 			eb.setFooter(user.getName(), user.getAvatarUrl());
-			event.getHook().sendMessageEmbeds(eb.build()).queue();
+			event.getHook().sendMessageEmbeds(eb.build())
+					.addActionRow(Button.primary("dailyCrossword", "Play Daily Crossword"))
+					.queue();
 			UserDao.getInstance().addDailyRewards(user.getIdLong());
 		} else {
 			EmbedBuilder eb = new EmbedBuilder();
@@ -55,14 +56,13 @@ public class UserService {
 			eb.setTitle("Daily Rewards");
 			eb.setDescription("You already have claimed daily rewards");
 			eb.setFooter(user.getName(), user.getAvatarUrl());
-			event.getHook().sendMessageEmbeds(eb.build()).queue();
+			event.getHook().sendMessageEmbeds(eb.build())
+					.addActionRow(Button.primary("dailyCrossword", "Play Daily Crossword")).queue();
 		}
 	}
 
 	private boolean isThisNotToday(String lastDailyDate) {
-		String currentDate = String.format("%d-%d-%d", Calendar.getInstance().get(Calendar.DATE),
-				Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.YEAR));
-		System.out.println(currentDate);
+		String currentDate = UtilService.getInstance().getDate();
 		return !currentDate.equals(lastDailyDate);
 	}
 

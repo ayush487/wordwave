@@ -14,37 +14,39 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 
 public class WordwaveApplication {
 
-	public static void main(String[] args) {
-		Properties properties = new Properties();
-		try {
-			properties.load(new FileInputStream("credential.properties"));
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
-		final String BOT_TOKEN = properties.getProperty("BOT_TOKEN");
-		final String guildEventWebhook = properties.getProperty("SERVER_EVENT_WEBHOOK");
-		final String wordAdderWebhook = properties.getProperty("WORD_ADDER_WEBHOOK");
-		final String wordRemoverWebhook = properties.getProperty("WORD_REMOVER_WEBHOOK");
-		
-		UtilService.getInstance().setGuildEventWebhookUrl(guildEventWebhook);
-		UtilService.getInstance().setWordAdderWebhookUrl(wordAdderWebhook);
-		UtilService.getInstance().setWordRemovedWebhookUrl(wordRemoverWebhook);
-		ChannelService.getInstance().loadDisabledChannels();
+    @SuppressWarnings("CallToPrintStackTrace")
+    public static void main(String[] args) {
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream("credential.properties"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+        final String BOT_TOKEN = properties.getProperty("BOT_TOKEN");
+        final String guildEventWebhook = properties.getProperty("SERVER_EVENT_WEBHOOK");
+        final String wordAdderWebhook = properties.getProperty("WORD_ADDER_WEBHOOK");
+        final String wordRemoverWebhook = properties.getProperty("WORD_REMOVER_WEBHOOK");
 
-//		DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(BOT_TOKEN,
-//				GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES);
-//		builder.setActivity(Activity.playing("Waking Up!"));
-//		builder.disableCache(CacheFlag.VOICE_STATE, CacheFlag.EMOJI, CacheFlag.STICKER, CacheFlag.SCHEDULED_EVENTS);
-//		builder.addEventListeners(new MainListener());
-//		builder.build();
+        UtilService.getInstance().setGuildEventWebhookUrl(guildEventWebhook);
+        UtilService.getInstance().setWordAdderWebhookUrl(wordAdderWebhook);
+        UtilService.getInstance().setWordRemovedWebhookUrl(wordRemoverWebhook);
+        ChannelService.getInstance().loadDisabledChannels();
 
-		JDABuilder
-				.create(BOT_TOKEN, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
-						GatewayIntent.DIRECT_MESSAGES)
-				.addEventListeners(new MainListener()).setActivity(Activity.watching("my development")).build();
+        // DefaultShardManagerBuilder builder =
+        // DefaultShardManagerBuilder.createDefault(BOT_TOKEN,
+        // GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
+        // GatewayIntent.DIRECT_MESSAGES);
+        // builder.setActivity(Activity.playing("Waking Up!"));
+        // builder.disableCache(CacheFlag.VOICE_STATE, CacheFlag.EMOJI,
+        // CacheFlag.STICKER, CacheFlag.SCHEDULED_EVENTS);
+        // builder.addEventListeners(new MainListener());
+        // builder.build();
+        JDABuilder
+                .create(BOT_TOKEN, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
+                        GatewayIntent.DIRECT_MESSAGES)
+                .addEventListeners(new MainListener()).setActivity(Activity.watching("my development")).build();
 
-		
-	}
+    }
 
 }

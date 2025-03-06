@@ -9,17 +9,17 @@ import java.util.stream.Collectors;
 
 public class Level {
 
-	private int level;
+	private final int level;
 	private int rows;
 	private int columns;
 	private Set<String> words;
-	private List<Character> allowed_letters;
+	private final List<Character> allowed_letters;
 	private char[][] grid_solved;
 	private char[][] grid_unsolved;
 	private String[] across_string;
 	private String[] down_string;
 	private int min_word_size;
-	private int max_word_size;
+	private final int max_word_size;
 
 	public Level(int level, String main_word, String words_combined, String level_data) {
 		this.level = level;
@@ -209,5 +209,20 @@ public class Level {
 
 	public int getMaxWordSize() {
 		return this.max_word_size;
+	}
+
+	public void removeEnterredWords(String[] enterredWords) {
+		for (String w : enterredWords) {
+			words.remove(w);
+		}
+	}
+
+	public void setUnsolvedGrid(String unsolvedGridData) {
+		String tempAcrossString[] = unsolvedGridData.split(":");
+		for (int i = 0; i < columns; i++) {
+			for (int j = 0; j < rows; j++) {
+				grid_unsolved[i][j] = tempAcrossString[i].charAt(j);
+			}
+		}
 	}
 }

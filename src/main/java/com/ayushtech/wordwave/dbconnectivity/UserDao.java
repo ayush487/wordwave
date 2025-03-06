@@ -4,8 +4,12 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Calendar;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+
+import com.ayushtech.wordwave.util.UserRecord;
+import com.ayushtech.wordwave.util.UtilService;
 
 public class UserDao {
 	private static UserDao instance = null;
@@ -87,14 +91,25 @@ public class UserDao {
 		Connection conn = ConnectionProvider.getConnection();
 		try {
 			Statement stmt = conn.createStatement();
-			String todayDate = String.format("%d-%d-%d", Calendar.getInstance().get(Calendar.DATE),
-					Calendar.getInstance().get(Calendar.MONTH), Calendar.getInstance().get(Calendar.YEAR));
+			String todayDate = UtilService.getInstance().getDate();
 			stmt.executeUpdate(String.format(
 					"INSERT INTO users (id, coins, last_daily) VALUES (%d, %d, '%s') ON CONFLICT(id) DO UPDATE SET coins = coins + excluded.coins, last_daily = excluded.last_daily;",
 					userId, 100, todayDate));
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void updateUserLastDailyDate(long userId) {
+		Connection conn = ConnectionProvider.getConnection();
+		try {
+			Statement stmt = conn.createStatement();
+			String todayDate = UtilService.getInstance().getDate();
+			stmt.executeUpdate("UPDATE users SET last_daily_crossword='" + todayDate + "' WHERE id=" + userId + ";");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public Optional<String> getUserLastDailyDate(long userId) {
@@ -136,6 +151,17 @@ public class UserDao {
 		}
 		return false;
 
+	}
+
+	public List<UserRecord> getTopUsersBasedOnLevel(int limit) throws SQLException {
+		Connection conn = ConnectionProvider.getConnection();
+		Statement stmt = conn.createStatement();
+		ResultSet rs = stmt.executeQuery("SELECT id,level FROM users ORDER BY level DESC LIMIT " + limit + ";");
+		List<UserRecord> records = new ArrayList<>(limit);
+		while (rs.next()) {
+			records.add(new UserRecord(rs.getLong("id"), rs.getInt("level")-1));
+		}
+		return records;
 	}
 
 }

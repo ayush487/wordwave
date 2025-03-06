@@ -2,6 +2,7 @@ package com.ayushtech.wordwave.util;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -118,46 +119,51 @@ public class UtilService {
 		return this.emojiMap.get(c);
 	}
 
+	public String getDate() {
+		return String.format("%d-%d-%d", Calendar.getInstance().get(Calendar.DATE),
+				Calendar.getInstance().get(Calendar.MONTH) + 1, Calendar.getInstance().get(Calendar.YEAR));
+	}
+
 	public String getProgressBar(int fill) {
 		int progressBarFillAmount = Math.round(fill / 10.0f) * 10;
 		String progressBar;
 		switch (progressBarFillAmount) {
-		case 0:
-			progressBar = bar1empty + bar2empty + bar2empty + bar2empty + bar3empty;
-			break;
-		case 10:
-			progressBar = bar1half + bar2empty + bar2empty + bar2empty + bar3empty;
-			break;
-		case 20:
-			progressBar = bar1full + bar2empty + bar2empty + bar2empty + bar3empty;
-			break;
-		case 30:
-			progressBar = bar1max + bar2half + bar2empty + bar2empty + bar3empty;
-			break;
-		case 40:
-			progressBar = bar1max + bar2full + bar2empty + bar2empty + bar3empty;
-			break;
-		case 50:
-			progressBar = bar1max + bar2max + bar2half + bar2empty + bar3empty;
-			break;
-		case 60:
-			progressBar = bar1max + bar2max + bar2full + bar2empty + bar3empty;
-			break;
-		case 70:
-			progressBar = bar1max + bar2max + bar2max + bar2half + bar3empty;
-			break;
-		case 80:
-			progressBar = bar1max + bar2max + bar2max + bar2full + bar3empty;
-			break;
-		case 90:
-			progressBar = bar1max + bar2max + bar2max + bar2max + bar3half;
-			break;
-		case 100:
-			progressBar = bar1max + bar2max + bar2max + bar2max + bar3full;
-			break;
-		default:
-			progressBar = bar1empty + bar2empty + bar2empty + bar2empty + bar3empty;
-			break;
+			case 0:
+				progressBar = bar1empty + bar2empty + bar2empty + bar2empty + bar3empty;
+				break;
+			case 10:
+				progressBar = bar1half + bar2empty + bar2empty + bar2empty + bar3empty;
+				break;
+			case 20:
+				progressBar = bar1full + bar2empty + bar2empty + bar2empty + bar3empty;
+				break;
+			case 30:
+				progressBar = bar1max + bar2half + bar2empty + bar2empty + bar3empty;
+				break;
+			case 40:
+				progressBar = bar1max + bar2full + bar2empty + bar2empty + bar3empty;
+				break;
+			case 50:
+				progressBar = bar1max + bar2max + bar2half + bar2empty + bar3empty;
+				break;
+			case 60:
+				progressBar = bar1max + bar2max + bar2full + bar2empty + bar3empty;
+				break;
+			case 70:
+				progressBar = bar1max + bar2max + bar2max + bar2half + bar3empty;
+				break;
+			case 80:
+				progressBar = bar1max + bar2max + bar2max + bar2full + bar3empty;
+				break;
+			case 90:
+				progressBar = bar1max + bar2max + bar2max + bar2max + bar3half;
+				break;
+			case 100:
+				progressBar = bar1max + bar2max + bar2max + bar2max + bar3full;
+				break;
+			default:
+				progressBar = bar1empty + bar2empty + bar2empty + bar2empty + bar3empty;
+				break;
 		}
 		return progressBar;
 	}

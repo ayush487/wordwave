@@ -27,7 +27,7 @@ public class ChannelsDao {
 		try {
 			var stmt = conn.createStatement();
 			var rs = stmt.executeQuery("SELECT channel FROM disabled_channels;");
-			Set<Long> disabledChannelSet = new HashSet<Long>();
+			Set<Long> disabledChannelSet = new HashSet<>();
 			while (rs.next()) {
 				disabledChannelSet.add(rs.getLong("channel"));
 			}

@@ -14,6 +14,7 @@ import com.ayushtech.wordwave.dbconnectivity.UserDao;
 import com.ayushtech.wordwave.util.UtilService;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -21,20 +22,20 @@ import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 public class CrosswordGame {
 
-	private static Random random = new Random();
+	protected static Random random = new Random();
 
-	private long userId;
+	protected long userId;
 	private final int asciA = 97;
-	private final int levelNumber;
-	private boolean usedHint;
-	private final Level currentLevel;
-	private long messageId;
-	private final MessageChannel channel;
-	private Set<String> enterredWords;
+	protected final int levelNumber;
+	protected boolean usedHint;
+	protected final Level currentLevel;
+	protected long messageId;
+	protected final MessageChannel channel;
+	protected Set<String> enterredWords;
 	private final int[] letterCounts = new int[26];
-	private final List<String> extraWords;
+	protected List<String> extraWords;
 
-	public CrosswordGame(long userId, Level level, MessageChannel channel) {
+	public CrosswordGame(long userId, Level level, MessageChannel channel, boolean startInstantly) {
 		this.userId = userId;
 		this.levelNumber = level.getLevel();
 		this.channel = channel;
@@ -45,6 +46,22 @@ public class CrosswordGame {
 		for (char c : level.getAllowedLetterList()) {
 			letterCounts[(int) c - asciA]++;
 		}
+		if (startInstantly)
+			sendGameEmbed();
+	}
+
+	protected void sendGameEmbed() {
+		this.channel.sendMessageEmbeds(getBeginningEmbed(currentLevel))
+				.addActionRow(
+						Button.primary("shuffleCrossword_" + userId,
+								Emoji.fromFormatted("<:refresh:1209076086185656340>")),
+						Button.primary("hintCrossword_" + userId, usedHint ? "💡 (100 🪙)" : "💡 (Free)"))
+				.addActionRow(Button.danger("quitCrossword_" + userId, "Quit"),
+						Button.primary("extraWords", "Extra Words"))
+				.queue(message -> this.messageId = message.getIdLong());
+	}
+
+	protected MessageEmbed getBeginningEmbed(Level level) {
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.setTitle(String.format("Level %d", levelNumber));
 		eb.setDescription(getGridFormated());
@@ -53,21 +70,16 @@ public class CrosswordGame {
 		sb.append(String.format("\nMinimum Word Size : `%d`", level.getMinWordSize()));
 		sb.append(String.format("\nMaximum Word Size : `%d`", level.getMaxWordSize()));
 		eb.addField("__Allowed Letters__", sb.toString(), false);
-		this.channel.sendMessageEmbeds(eb.build())
-				.addActionRow(
-						Button.primary("shuffleCrossword_" + userId,
-								Emoji.fromFormatted("<:refresh:1209076086185656340>")),
-						Button.primary("hintCrossword_" + userId, "💡 (Free)"))
-				.addActionRow(Button.danger("quitCrossword_" + userId, "Quit"),
-						Button.primary("extraWords", "Extra Words"))
-				.queue(message -> this.messageId = message.getIdLong());
+		return eb.build();
 	}
 
 	public void updateGame(CorrectWordResponse response) {
 		this.currentLevel.updateUnsolvedGrid(response);
 		if (response.levelCompleted()) {
 			completeThisLevel();
-			this.channel.sendMessage("You completed Level " + levelNumber + " :tada:")
+			String messageToSend = levelNumber == 0 ? "Daily Level Completed! :tada:"
+					: "You completed Level " + levelNumber + " :tada:";
+			this.channel.sendMessage(messageToSend)
 					.addActionRow(Button.primary("newCrossword_" + userId, "Play Next Level")).queue();
 		} else {
 			updateEmbed();
@@ -76,13 +88,10 @@ public class CrosswordGame {
 	}
 
 	public void quitGame(ButtonInteractionEvent event) {
-		EmbedBuilder eb = new EmbedBuilder();
-		eb.setTitle(String.format("Level %d", levelNumber));
-		eb.setDescription(getGridFormated());
-		eb.addField("__Allowed Letters__", this.currentLevel.getAllowedLetters(), false);
-		eb.setColor(Color.red);
-		eb.setFooter("Game quit!");
-		event.editMessageEmbeds(eb.build()).setActionRow(Button.primary("newCrossword_" + userId, "Start New Game"))
+		var embed = getEmbed((byte) 1, "Game quit!");
+		event.editMessageEmbeds(embed).setActionRow(
+				levelNumber == 0 ? Button.primary("dailyCrossword", "Start again")
+						: Button.primary("newCrossword_" + userId, "Start New Game"))
 				.queue();
 		CompletableFuture.runAsync(() -> {
 			UserDao.getInstance().updateExtraWordCount(userId, extraWords.size(), false);
@@ -90,44 +99,31 @@ public class CrosswordGame {
 	}
 
 	public void cancelGame() {
-		EmbedBuilder eb = new EmbedBuilder();
-		eb.setTitle(String.format("Level %d", levelNumber));
-		eb.setDescription(getGridFormated());
-		eb.addField("__Allowed Letters__", this.currentLevel.getAllowedLetters(), false);
-		eb.setColor(Color.red);
-		eb.setFooter("Game cancelled!");
-		this.channel.editMessageEmbedsById(messageId, eb.build())
+		var embed = getEmbed((byte) 1, "Game cancelled!");
+		this.channel.editMessageEmbedsById(messageId, embed)
 				.setActionRow(Button.danger("cancelled", "Cancelled").asDisabled()).queue();
 		CompletableFuture.runAsync(() -> {
 			UserDao.getInstance().updateExtraWordCount(userId, extraWords.size(), false);
 		});
 	}
 
-	private void completeThisLevel() {
-		EmbedBuilder eb = new EmbedBuilder();
-		eb.setTitle(String.format("Level %d", levelNumber));
-		eb.setDescription(getGridFormated());
-		eb.addField("__Allowed Letters__", this.currentLevel.getAllowedLetters(), false);
-		eb.setColor(Color.green);
-		eb.setFooter("Level Completed!");
-		this.channel.editMessageEmbedsById(messageId, eb.build())
+	protected void completeThisLevel() {
+		var embed = getEmbed((byte) 0, "Level Completed!");
+		this.channel.editMessageEmbedsById(messageId, embed)
 				.setActionRow(Button.success("complete", "Level Completed").asDisabled()).queue();
+		try {
+			LevelsDao.getInstance().promoteUserLevel(userId, levelNumber);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
-	private void updateEmbed() {
-		EmbedBuilder eb = new EmbedBuilder();
-		eb.setTitle(String.format("Level %d", levelNumber));
-		eb.setDescription(getGridFormated());
-		eb.setColor(Color.yellow);
-		StringBuilder sb = new StringBuilder(currentLevel.getAllowedLetters());
-		sb.append(String.format("\nMinimum Word Size : `%d`", currentLevel.getMinWordSize()));
-		sb.append(String.format("\nMaximum Word Size : `%d`", currentLevel.getMaxWordSize()));
-
-		eb.addField("__Allowed Letters__", sb.toString(), false);
-		this.channel.editMessageEmbedsById(messageId, eb.build()).queue();
+	protected void updateEmbed() {
+		var embed = getEmbed((byte) 2, null);
+		this.channel.editMessageEmbedsById(messageId, embed).queue();
 	}
 
-	private String getGridFormated() {
+	protected String getGridFormated() {
 		char[][] gridUnsolved = currentLevel.getGridUnsolved();
 		StringBuilder gridFormatted = new StringBuilder();
 		for (char[] column : gridUnsolved) {
@@ -137,6 +133,21 @@ public class CrosswordGame {
 			gridFormatted.append("\n");
 		}
 		return gridFormatted.toString();
+	}
+
+	protected MessageEmbed getEmbed(byte status, String footerText) {
+		EmbedBuilder eb = new EmbedBuilder();
+		eb.setTitle(String.format("Level %d", levelNumber));
+		eb.setDescription(getGridFormated());
+		Color color = status == 0 ? Color.green : status == 1 ? Color.red : Color.yellow;
+		eb.setColor(color);
+		StringBuilder sb = new StringBuilder(currentLevel.getAllowedLetters());
+		sb.append(String.format("\nMinimum Word Size : `%d`", currentLevel.getMinWordSize()));
+		sb.append(String.format("\nMaximum Word Size : `%d`", currentLevel.getMaxWordSize()));
+		eb.addField("__Allowed Letters__", sb.toString(), false);
+		if (footerText != null)
+			eb.setFooter(footerText);
+		return eb.build();
 	}
 
 	public boolean activateHint() {
@@ -178,16 +189,8 @@ public class CrosswordGame {
 
 	public void shuffleAllowedLetters(ButtonInteractionEvent event) {
 		currentLevel.shuffleAllowedLetters();
-		EmbedBuilder eb = new EmbedBuilder();
-		eb.setTitle(String.format("Level %d", levelNumber));
-		eb.setDescription(getGridFormated());
-		eb.setColor(Color.yellow);
-		StringBuilder sb = new StringBuilder(currentLevel.getAllowedLetters());
-		sb.append(String.format("\nMinimum Word Size : `%d`", currentLevel.getMinWordSize()));
-		sb.append(String.format("\nMaximum Word Size : `%d`", currentLevel.getMaxWordSize()));
-
-		eb.addField("__Allowed Letters__", sb.toString(), false);
-		event.editMessageEmbeds(eb.build()).queue();
+		var emb = getEmbed((byte) 2, null);
+		event.editMessageEmbeds(emb).queue();
 	}
 
 	public void addAnswerredWords(String word) {
@@ -215,7 +218,7 @@ public class CrosswordGame {
 		return true;
 	}
 
-	private void checkIfWordCompleted() {
+	protected void checkIfWordCompleted() {
 		CompletableFuture.runAsync(() -> {
 			boolean isLevelCompleted = currentLevel.checkExtraWordCompletion();
 			if (isLevelCompleted) {

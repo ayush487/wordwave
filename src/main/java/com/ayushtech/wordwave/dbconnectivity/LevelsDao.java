@@ -6,9 +6,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import com.ayushtech.wordwave.game.Level;
+import com.ayushtech.wordwave.game.dailycw.DailyCrosswordData;
 
 public class LevelsDao {
 
@@ -55,10 +57,66 @@ public class LevelsDao {
 				words.add(rs.getString("words"));
 			}
 			return words;
-		} catch (Exception e) {
+		} catch (SQLException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 		return null;
+	}
+
+	public Optional<Level> getDailyLevel(long userId, String todayDate) throws SQLException {
+		Connection conn = ConnectionProvider.getConnection();
+		Statement stmt = conn.createStatement();
+		ResultSet temprs = stmt.executeQuery("SELECT last_daily_crossword FROM users WHERE id=" + userId + ";");
+		boolean hasUserPlayedToday = false;
+		if (temprs.next()) {
+			hasUserPlayedToday = todayDate.equals(temprs.getString("last_daily_crossword"));
+		}
+		if (hasUserPlayedToday) {
+			return Optional.empty();
+		}
+		ResultSet rs = stmt
+				.executeQuery("SELECT main_word, words, level_data FROM dailylevels WHERE date='" + todayDate + "';");
+		if (rs.next()) {
+			var level = new Level(0, rs.getString("main_word"), rs.getString("words"), rs.getString("level_data"));
+			return Optional.of(level);
+		}
+		return Optional.empty();
+	}
+
+	public Optional<DailyCrosswordData> getDailyData(long userId, String date) {
+		String query = String.format(
+				"SELECT used_hint,enterred_words,extra_words,level_solved,sun FROM daily_cw_cont_data where id=%d and date='%s';",
+				userId, date);
+		Connection conn = ConnectionProvider.getConnection();
+		try {
+			Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs.next()) {
+				DailyCrosswordData data = new DailyCrosswordData(userId, date, rs.getString("level_solved"),
+						rs.getString("enterred_words"), rs.getString("extra_words"), rs.getBoolean("used_hint"), rs.getInt("sun"));
+				return Optional.of(data);
+			} else {
+				return Optional.empty();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return Optional.empty();
+		}
+	}
+
+	public void saveDailyLevelData(DailyCrosswordData data) {
+		String query = String.format(
+				"INSERT INTO daily_cw_cont_data (id, used_hint, enterred_words, extra_words, level_solved, date, sun) VALUES (%d, %b, '%s', '%s', '%s', '%s', %d);",
+				data.userId(), data.usedHint(), data.enterredWords(), data.extraWords(), data.unsolvedGrid(), data.date(),
+				data.sun());
+		Connection conn = ConnectionProvider.getConnection();
+		try {
+			var stmt = conn.createStatement();
+			stmt.executeUpdate("DELETE FROM daily_cw_cont_data WHERE id=" + data.userId() + ";");
+			stmt.executeUpdate(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 }
