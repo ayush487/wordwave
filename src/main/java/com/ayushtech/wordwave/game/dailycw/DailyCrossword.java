@@ -27,11 +27,11 @@ public class DailyCrossword extends CrosswordGame {
     private int sunCollected = 0;
     private String date;
 
-    public DailyCrossword(long userId, Level level, MessageChannel channel) {
+    public DailyCrossword(long userId, Level level, MessageChannel channel, String date) {
         super(userId, level, channel, false);
-        this.date = UtilService.getInstance().getDate();
+        this.date = date;
         Optional<DailyCrosswordData> dailyOptional = LevelsDao.getInstance().getDailyData(userId,
-                UtilService.getInstance().getDate());
+                date);
         if (dailyOptional.isPresent()) {
             DailyCrosswordData levelData = dailyOptional.get();
             currentLevel.removeEnterredWords(levelData.enterredWords().split(","));

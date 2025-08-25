@@ -2,7 +2,6 @@ package com.ayushtech.wordwave.dbconnectivity;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.SQLException;
 
 public class ConnectionProvider {
   private static Connection connection = null;
@@ -10,10 +9,13 @@ public class ConnectionProvider {
   public static Connection getConnection() {
     if (connection == null) {
       try {
-        Class.forName("org.sqlite.JDBC");
-        connection = DriverManager.getConnection("jdbc:sqlite:wordwave.db");
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        connection = DriverManager.getConnection(
+            DBInfo.url,
+            DBInfo.user,
+            DBInfo.password);
         return connection;
-      } catch (ClassNotFoundException | SQLException e) {
+      } catch (Exception e) {
         e.printStackTrace();
         return null;
       }

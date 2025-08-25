@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import com.ayushtech.wordwave.dbconnectivity.DBInfo;
 import com.ayushtech.wordwave.listeners.MainListener;
 import com.ayushtech.wordwave.util.ChannelService;
 import com.ayushtech.wordwave.util.UtilService;
@@ -27,7 +28,11 @@ public class WordwaveApplication {
         final String guildEventWebhook = properties.getProperty("SERVER_EVENT_WEBHOOK");
         final String wordAdderWebhook = properties.getProperty("WORD_ADDER_WEBHOOK");
         final String wordRemoverWebhook = properties.getProperty("WORD_REMOVER_WEBHOOK");
+        final String dbUrl = properties.getProperty("DB_URL");
+        final String dbUsername = properties.getProperty("DB_USERNAME");
+        final String dbPassword = properties.getProperty("DB_PASSWORD");
 
+        DBInfo.setData(dbUrl, dbUsername, dbPassword);
         UtilService.getInstance().setGuildEventWebhookUrl(guildEventWebhook);
         UtilService.getInstance().setWordAdderWebhookUrl(wordAdderWebhook);
         UtilService.getInstance().setWordRemovedWebhookUrl(wordRemoverWebhook);
@@ -46,7 +51,6 @@ public class WordwaveApplication {
                 .create(BOT_TOKEN, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
                         GatewayIntent.DIRECT_MESSAGES)
                 .addEventListeners(new MainListener()).setActivity(Activity.watching("my development")).build();
-
     }
 
 }

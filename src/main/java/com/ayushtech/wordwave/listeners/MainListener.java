@@ -3,6 +3,7 @@ package com.ayushtech.wordwave.listeners;
 import com.ayushtech.wordwave.game.CrosswordGameHandler;
 import com.ayushtech.wordwave.util.ChannelService;
 import com.ayushtech.wordwave.util.LeaderBoardHandler;
+import com.ayushtech.wordwave.util.LevelAppendService;
 import com.ayushtech.wordwave.util.MetricService;
 import com.ayushtech.wordwave.util.UserService;
 import com.ayushtech.wordwave.util.UtilService;
@@ -115,6 +116,9 @@ public class MainListener extends ListenerAdapter {
                 break;
             case "view_level":
                 CrosswordGameHandler.getInstance().handleViewLevelCommand(event);
+                break;
+            case "add_level":
+                LevelAppendService.getInstance().handleLevelAddCommand(event);
                 break;
             default:
                 break;

@@ -57,7 +57,7 @@ public class UserService {
 			eb.setDescription("You already have claimed daily rewards");
 			eb.setFooter(user.getName(), user.getAvatarUrl());
 			event.getHook().sendMessageEmbeds(eb.build())
-					.addActionRow(Button.primary("dailyCrossword", "Play Daily Crossword")).queue();
+					.addActionRow(Button.primary("dailyCrossword", "Play Daily Crossword").asDisabled()).queue();
 		}
 	}
 

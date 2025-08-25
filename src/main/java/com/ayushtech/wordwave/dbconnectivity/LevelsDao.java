@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -76,7 +77,7 @@ public class LevelsDao {
 			return Optional.empty();
 		}
 		ResultSet rs = stmt
-				.executeQuery("SELECT main_word, words, level_data FROM dailylevels WHERE date='" + todayDate + "';");
+				.executeQuery("SELECT main_word, words, level_data FROM dailylevels WHERE leveldate='" + todayDate + "';");
 		if (rs.next()) {
 			var level = new Level(0, rs.getString("main_word"), rs.getString("words"), rs.getString("level_data"));
 			return Optional.of(level);
@@ -86,7 +87,7 @@ public class LevelsDao {
 
 	public Optional<DailyCrosswordData> getDailyData(long userId, String date) {
 		String query = String.format(
-				"SELECT used_hint,enterred_words,extra_words,level_solved,sun FROM daily_cw_cont_data where id=%d and date='%s';",
+				"SELECT used_hint,enterred_words,extra_words,level_solved,sun FROM daily_cw_cont_data where id=%d and leveldate='%s';",
 				userId, date);
 		Connection conn = ConnectionProvider.getConnection();
 		try {
@@ -107,7 +108,7 @@ public class LevelsDao {
 
 	public void saveDailyLevelData(DailyCrosswordData data) {
 		String query = String.format(
-				"INSERT INTO daily_cw_cont_data (id, used_hint, enterred_words, extra_words, level_solved, date, sun) VALUES (%d, %b, '%s', '%s', '%s', '%s', %d);",
+				"INSERT INTO daily_cw_cont_data (id, used_hint, enterred_words, extra_words, level_solved, leveldate, sun) VALUES (%d, %b, '%s', '%s', '%s', '%s', %d);",
 				data.userId(), data.usedHint(), data.enterredWords(), data.extraWords(), data.unsolvedGrid(), data.date(),
 				data.sun());
 		Connection conn = ConnectionProvider.getConnection();
@@ -115,6 +116,23 @@ public class LevelsDao {
 			var stmt = conn.createStatement();
 			stmt.executeUpdate("DELETE FROM daily_cw_cont_data WHERE id=" + data.userId() + ";");
 			stmt.executeUpdate(query);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void addLevels(List<LevelData> levels) {
+		Connection conn = ConnectionProvider.getConnection();
+		String query = "INSERT INTO levels (level, main_word, words, level_data) VALUES (?, ?, ?, ?)";
+		try (PreparedStatement preparedStatement = conn.prepareStatement(query)) {
+			for (LevelData level : levels) {
+				preparedStatement.setInt(1, level.levelNumber());
+				preparedStatement.setString(2, level.mainWord());
+				preparedStatement.setString(3, level.words());
+				preparedStatement.setString(4, level.levelData());
+				preparedStatement.addBatch();
+			}
+			preparedStatement.executeBatch();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

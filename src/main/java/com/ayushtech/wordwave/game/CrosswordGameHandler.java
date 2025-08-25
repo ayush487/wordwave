@@ -147,7 +147,7 @@ public class CrosswordGameHandler {
 				event.getHook().sendMessage("You already played daily puzzle today").setEphemeral(true).queue();
 				return;
 			} else {
-				var game = new DailyCrossword(userId, dLOpt.get(), event.getChannel());
+				var game = new DailyCrossword(userId, dLOpt.get(), event.getChannel(), todayDate);
 				gameMap.put(userId, game);
 				final int gameHashCode = game.hashCode();
 				CompletableFuture.delayedExecutor(CROSSWORD_DURATION, TimeUnit.MINUTES).execute(() -> {
