@@ -57,8 +57,25 @@ public class UserService {
 			eb.setDescription("You already have claimed daily rewards");
 			eb.setFooter(user.getName(), user.getAvatarUrl());
 			event.getHook().sendMessageEmbeds(eb.build())
-					.addActionRow(Button.primary("dailyCrossword", "Play Daily Crossword").asDisabled()).queue();
+					// disabled this button for now
+					// .addActionRow(Button.primary("dailyCrossword", "Play Daily Crossword").asDisabled())
+					.queue();
 		}
+	}
+
+	public void handleHelpCommand(SlashCommandInteractionEvent event) {
+		event.deferReply().queue();
+		EmbedBuilder eb = new EmbedBuilder();
+		eb.setColor(Color.blue);
+		eb.setTitle("Help");
+		eb.setDescription("Here are the commands you can use:");
+		eb.addField("/crossword", "Start a new crossword game", false);
+		eb.addField("/balance", "Check your balance", false);
+		eb.addField("/daily", "Claim your daily rewards", false);
+		eb.addField("/leaderboards", "View the leaderboards", false);
+		eb.addField("/extra_words", "View the extra words", false);
+		eb.addField("__Moderator Commands__", "**/enable** : Enable the bot in this channel\n**/disable** : Disable the bot in this channel\n**/disable_all_channels** : Disable the bot in all channels\n`To use these commands, you need MANAGE_CHANNEL permissions.`", false);
+		event.getHook().sendMessageEmbeds(eb.build()).queue();
 	}
 
 	private boolean isThisNotToday(String lastDailyDate) {

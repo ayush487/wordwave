@@ -9,9 +9,10 @@ import com.ayushtech.wordwave.listeners.MainListener;
 import com.ayushtech.wordwave.util.ChannelService;
 import com.ayushtech.wordwave.util.UtilService;
 
-import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
+import net.dv8tion.jda.api.utils.cache.CacheFlag;
 
 public class WordwaveApplication {
 
@@ -38,19 +39,16 @@ public class WordwaveApplication {
         UtilService.getInstance().setWordRemovedWebhookUrl(wordRemoverWebhook);
         ChannelService.getInstance().loadDisabledChannels();
 
-        // DefaultShardManagerBuilder builder =
-        // DefaultShardManagerBuilder.createDefault(BOT_TOKEN,
-        // GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
-        // GatewayIntent.DIRECT_MESSAGES);
-        // builder.setActivity(Activity.playing("Waking Up!"));
-        // builder.disableCache(CacheFlag.VOICE_STATE, CacheFlag.EMOJI,
-        // CacheFlag.STICKER, CacheFlag.SCHEDULED_EVENTS);
-        // builder.addEventListeners(new MainListener());
-        // builder.build();
-        JDABuilder
-                .create(BOT_TOKEN, GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
-                        GatewayIntent.DIRECT_MESSAGES)
-                .addEventListeners(new MainListener()).setActivity(Activity.watching("my development")).build();
+        DefaultShardManagerBuilder builder =
+        DefaultShardManagerBuilder.createDefault(BOT_TOKEN,
+        GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
+        GatewayIntent.DIRECT_MESSAGES);
+        builder.setActivity(Activity.playing("/crossword"));
+        builder.disableCache(CacheFlag.VOICE_STATE, CacheFlag.EMOJI,
+        CacheFlag.STICKER, CacheFlag.SCHEDULED_EVENTS);
+        builder.addEventListeners(new MainListener());
+        builder.build();
+        
     }
 
 }

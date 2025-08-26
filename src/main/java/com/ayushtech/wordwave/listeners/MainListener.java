@@ -72,6 +72,9 @@ public class MainListener extends ListenerAdapter {
             case "crossword":
                 CrosswordGameHandler.getInstance().handleCrosswordSlashCommand(event);
                 return;
+            case "help" :
+                UserService.getInstance().handleHelpCommand(event);
+                return;
             case "balance":
                 UserService.getInstance().handleBalanceCommand(event);
                 return;
