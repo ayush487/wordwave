@@ -93,7 +93,7 @@ public class UserDao {
 			Statement stmt = conn.createStatement();
 			String todayDate = UtilService.getInstance().getDate();
 			stmt.executeUpdate(String.format(
-					"INSERT INTO users (id, coins, last_daily) VALUES (%d, %d, '%s') ON CONFLICT(id) DO UPDATE SET coins = coins + excluded.coins, last_daily = excluded.last_daily;",
+					"INSERT INTO users (id, coins, last_daily) VALUES (%d, %d, '%s') ON DUPLICATE KEY UPDATE coins = coins + VALUES(coins), last_daily = VALUES(last_daily);",
 					userId, 100, todayDate));
 		} catch (SQLException e) {
 			e.printStackTrace();

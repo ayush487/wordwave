@@ -47,7 +47,7 @@ public class UserService {
 			eb.setDescription("100 :coin: is added to your account.");
 			eb.setFooter(user.getName(), user.getAvatarUrl());
 			event.getHook().sendMessageEmbeds(eb.build())
-					.addActionRow(Button.primary("dailyCrossword", "Play Daily Crossword"))
+					// .addActionRow(Button.primary("dailyCrossword", "Play Daily Crossword"))
 					.queue();
 			UserDao.getInstance().addDailyRewards(user.getIdLong());
 		} else {
