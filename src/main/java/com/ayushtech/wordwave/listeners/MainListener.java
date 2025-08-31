@@ -7,6 +7,7 @@ import com.ayushtech.wordwave.util.LevelAppendService;
 import com.ayushtech.wordwave.util.MetricService;
 import com.ayushtech.wordwave.util.UserService;
 import com.ayushtech.wordwave.util.UtilService;
+import com.ayushtech.wordwave.util.VotingService;
 
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
@@ -18,6 +19,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 public class MainListener extends ListenerAdapter {
 
     private ChannelService channelService;
+    private final long vote_notifs_channel = 1409215253790720050l;
 
     public MainListener() {
         super();
@@ -26,6 +28,13 @@ public class MainListener extends ListenerAdapter {
 
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {
+        long channelId = event.getChannel().getIdLong();
+        if (channelId == vote_notifs_channel) {
+            String voter_id = event.getMessage().getContentDisplay();
+            VotingService.getInstance().voteUser(event.getJDA(), voter_id);
+            return;
+        }
+
         if (event.getAuthor().isBot() || channelService.isChannelDisabled(event.getChannel().getIdLong())) {
             return;
         }
@@ -77,6 +86,9 @@ public class MainListener extends ListenerAdapter {
                 return;
             case "balance":
                 UserService.getInstance().handleBalanceCommand(event);
+                return;
+            case "vote":
+                VotingService.getInstance().handleVoteCommand(event);
                 return;
             case "daily":
                 UserService.getInstance().handleDailyCommand(event);

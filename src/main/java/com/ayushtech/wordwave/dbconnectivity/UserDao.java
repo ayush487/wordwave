@@ -100,6 +100,18 @@ public class UserDao {
 		}
 	}
 
+	public void addCoins(long userId, int coins) {
+		Connection conn = ConnectionProvider.getConnection();
+		try {
+			Statement stmt = conn.createStatement();
+			stmt.executeUpdate(String.format(
+					"INSERT INTO users (id, coins) VALUES (%d, %d) ON DUPLICATE KEY UPDATE coins = coins + VALUES(coins);",
+					userId, coins));
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void updateUserLastDailyDate(long userId) {
 		Connection conn = ConnectionProvider.getConnection();
 		try {

@@ -103,7 +103,7 @@ public class UtilService {
 		sendMessageToWebhook(guildEventWebhookUrl, msg);
 	}
 
-	private void sendMessageToWebhook(String url, String message) {
+	public void sendMessageToWebhook(String url, String message) {
 		OkHttpClient client = new OkHttpClient();
 		String jsonInputString = String.format("{\"content\" : \"%s\"}", message);
 		RequestBody body = RequestBody.create(jsonInputString, MediaType.parse("application/json; charset=utf-8"));

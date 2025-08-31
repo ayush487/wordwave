@@ -8,6 +8,7 @@ import com.ayushtech.wordwave.dbconnectivity.DBInfo;
 import com.ayushtech.wordwave.listeners.MainListener;
 import com.ayushtech.wordwave.util.ChannelService;
 import com.ayushtech.wordwave.util.UtilService;
+import com.ayushtech.wordwave.util.VotingService;
 
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -29,6 +30,7 @@ public class WordwaveApplication {
         final String guildEventWebhook = properties.getProperty("SERVER_EVENT_WEBHOOK");
         final String wordAdderWebhook = properties.getProperty("WORD_ADDER_WEBHOOK");
         final String wordRemoverWebhook = properties.getProperty("WORD_REMOVER_WEBHOOK");
+        final String voterWebhookUrl = properties.getProperty("VOTER_WEBHOOK_URL");
         final String dbUrl = properties.getProperty("DB_URL");
         final String dbUsername = properties.getProperty("DB_USERNAME");
         final String dbPassword = properties.getProperty("DB_PASSWORD");
@@ -38,6 +40,7 @@ public class WordwaveApplication {
         UtilService.getInstance().setWordAdderWebhookUrl(wordAdderWebhook);
         UtilService.getInstance().setWordRemovedWebhookUrl(wordRemoverWebhook);
         ChannelService.getInstance().loadDisabledChannels();
+        VotingService.setVotingWebhookUrl(voterWebhookUrl);
 
         DefaultShardManagerBuilder builder =
         DefaultShardManagerBuilder.createDefault(BOT_TOKEN,
