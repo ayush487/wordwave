@@ -74,6 +74,7 @@ public class UserService {
 		eb.addField("/daily", "Claim your daily rewards", false);
 		eb.addField("/leaderboards", "View the leaderboards", false);
 		eb.addField("/extra_words", "View the extra words", false);
+		eb.addField("/vote", "Vote for WordWave and earn rewards", false);
 		eb.addField("__Moderator Commands__", "**/enable** : Enable the bot in this channel\n**/disable** : Disable the bot in this channel\n**/disable_all_channels** : Disable the bot in all channels\n`To use these commands, you need MANAGE_CHANNEL permissions.`", false);
 		event.getHook().sendMessageEmbeds(eb.build()).queue();
 	}
