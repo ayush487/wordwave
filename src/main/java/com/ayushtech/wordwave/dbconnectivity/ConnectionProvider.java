@@ -41,7 +41,7 @@ public class ConnectionProvider {
         e.printStackTrace();
       }
     }
-    CompletableFuture.delayedExecutor(60, TimeUnit.HOURS)
+    CompletableFuture.delayedExecutor(60, TimeUnit.MINUTES)
         .execute(() -> ConnectionProvider.resetConnectionEveryHour(false));
   }
 }
