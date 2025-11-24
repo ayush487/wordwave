@@ -65,7 +65,7 @@ public class DailyCrossword extends CrosswordGame {
                 sunCollected++;
                 sunPosition = getNewSunPositon();
             }
-            updateEmbed();
+            updateEmbed(null);
             checkIfWordCompleted();
         }
     }
@@ -200,7 +200,7 @@ public class DailyCrossword extends CrosswordGame {
                 }
             }
             currentLevel.unlockLetter(pointer.i(), pointer.j());
-            updateEmbed();
+            updateEmbed(null);
             usedHint = true;
             checkIfWordCompleted();
             return true;

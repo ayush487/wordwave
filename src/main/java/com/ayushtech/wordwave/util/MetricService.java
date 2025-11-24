@@ -84,14 +84,14 @@ public class MetricService {
 		});
 	}
 
-	public void registerTextCommand(String message) {
-		CompletableFuture.runAsync(() -> {
-			if (message.startsWith("!crossword")) {
-				commandMetricMap.get("text_crossword").incrementAndGet();
-				return;
-			}
-		});
-	}
+	// public void registerTextCommand(String message) {
+	// 	CompletableFuture.runAsync(() -> {
+	// 		if (message.startsWith("!crossword")) {
+	// 			commandMetricMap.get("text_crossword").incrementAndGet();
+	// 			return;
+	// 		}
+	// 	});
+	// }
 
 	private void loadCommandMetricMap() {
 		commandMetricMap.put("slash_crossword", new AtomicLong());

@@ -3,6 +3,7 @@ package com.ayushtech.wordwave.game;
 import java.awt.Color;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -18,6 +19,8 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.middleman.MessageChannel;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
+import net.dv8tion.jda.api.interactions.components.LayoutComponent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 public class CrosswordGame {
@@ -35,12 +38,17 @@ public class CrosswordGame {
 	private final int[] letterCounts = new int[26];
 	protected List<String> extraWords;
 
+	// Variable to store the current word being formed
+	private StringBuilder currentWord = new StringBuilder();
+	private boolean[] appendedLetters;
+
 	public CrosswordGame(long userId, Level level, MessageChannel channel, boolean startInstantly) {
 		this.userId = userId;
 		this.levelNumber = level.getLevel();
 		this.channel = channel;
 		this.currentLevel = level;
 		this.usedHint = false;
+		appendedLetters = new boolean[level.getAllowedLetterList().size()];
 		this.enterredWords = new HashSet<String>();
 		this.extraWords = new ArrayList<String>();
 		for (char c : level.getAllowedLetterList()) {
@@ -51,14 +59,22 @@ public class CrosswordGame {
 	}
 
 	protected void sendGameEmbed() {
-		this.channel.sendMessageEmbeds(getBeginningEmbed(currentLevel))
-				.addActionRow(
-						Button.primary("shuffleCrossword_" + userId,
-								Emoji.fromFormatted("<:refresh:1209076086185656340>")),
-						Button.primary("hintCrossword_" + userId, usedHint ? "💡 (100 🪙)" : "💡 (Free)"))
-				.addActionRow(Button.danger("quitCrossword_" + userId, "Quit"),
-						Button.primary("extraWords", "Extra Words"))
+		this.channel.sendMessageEmbeds(getBeginningEmbed(currentLevel)).setComponents(getComponents())
 				.queue(message -> this.messageId = message.getIdLong());
+		;
+	}
+
+	public Collection<? extends LayoutComponent> getComponents() {
+		Collection<ActionRow> components = new ArrayList<>();
+		List<ActionRow> letterRows = getLetterRows();
+		components.addAll(letterRows);
+		components.add(ActionRow.of(
+				Button.primary("submitWord_" + userId, "Submit"),
+				Button.primary("hintCrossword_" + userId, usedHint ? "💡 (100 🪙)" : "💡 (Free)")));
+		components.add(ActionRow.of(
+				Button.danger("quitCrossword_" + userId, "Quit"),
+				Button.primary("extraWords", "Extra Words")));
+		return components;
 	}
 
 	protected MessageEmbed getBeginningEmbed(Level level) {
@@ -82,7 +98,7 @@ public class CrosswordGame {
 			this.channel.sendMessage(messageToSend)
 					.addActionRow(Button.primary("newCrossword_" + userId, "Play Next Level")).queue();
 		} else {
-			updateEmbed();
+			updateEmbed(null);
 			checkIfWordCompleted();
 		}
 	}
@@ -118,9 +134,11 @@ public class CrosswordGame {
 		}
 	}
 
-	protected void updateEmbed() {
-		var embed = getEmbed((byte) 2, null);
-		this.channel.editMessageEmbedsById(messageId, embed).queue();
+	protected void updateEmbed(String footerText) {
+		var embed = getEmbed((byte) 2, footerText);
+		this.channel.editMessageEmbedsById(messageId, embed)
+				.setComponents(getComponents())
+				.queue();
 	}
 
 	protected String getGridFormated() {
@@ -141,10 +159,14 @@ public class CrosswordGame {
 		eb.setDescription(getGridFormated());
 		Color color = status == 0 ? Color.green : status == 1 ? Color.red : Color.yellow;
 		eb.setColor(color);
-		StringBuilder sb = new StringBuilder(currentLevel.getAllowedLetters());
+		StringBuilder sb = new StringBuilder("**__Allowed Letters__ : ** " + currentLevel.getAllowedLetters());
+		sb.append("\n**__Current Word__ : " + currentWord.toString().toUpperCase() + "**\n");
+		// StringBuilder sb = new StringBuilder("**" + this.currentWord.toString().toUpperCase() + "**");
 		sb.append(String.format("\nMinimum Word Size : `%d`", currentLevel.getMinWordSize()));
 		sb.append(String.format("\nMaximum Word Size : `%d`", currentLevel.getMaxWordSize()));
-		eb.addField("__Allowed Letters__", sb.toString(), false);
+		eb.addField("Logs", sb.toString(), false);
+		
+		// eb.addField("__Current Word__", sb.toString(), false);
 		if (footerText != null)
 			eb.setFooter(footerText);
 		return eb.build();
@@ -164,7 +186,7 @@ public class CrosswordGame {
 		} else {
 			var pointer = emptyPositionList.get(random.nextInt(emptyPositionList.size()));
 			currentLevel.unlockLetter(pointer.i(), pointer.j());
-			updateEmbed();
+			updateEmbed(null);
 			usedHint = true;
 			checkIfWordCompleted();
 			return true;
@@ -185,12 +207,6 @@ public class CrosswordGame {
 
 	public int getLevel() {
 		return this.levelNumber;
-	}
-
-	public void shuffleAllowedLetters(ButtonInteractionEvent event) {
-		currentLevel.shuffleAllowedLetters();
-		var emb = getEmbed((byte) 2, null);
-		event.editMessageEmbeds(emb).queue();
 	}
 
 	public void addAnswerredWords(String word) {
@@ -240,5 +256,48 @@ public class CrosswordGame {
 
 	public boolean hasUsedHint() {
 		return this.usedHint;
+	}
+
+	private List<ActionRow> getLetterRows() {
+		var allowedLetters = this.currentLevel.getAllowedLetterList();
+		List<ActionRow> letterRows = new ArrayList<>();
+
+		for (int i = 0; i < allowedLetters.size(); i += 5) {
+			List<Button> buttons = new ArrayList<>();
+			for (int j = i; j < i + 5 && j < allowedLetters.size(); j++) {
+				char letter = allowedLetters.get(j);
+				if (appendedLetters[j]) {
+					buttons.add(Button.primary("appendLetter_" + userId + "_" + j,
+							Emoji.fromUnicode(UtilService.getInstance().getDefaultEmoji(letter))).asDisabled());
+				} else {
+					buttons.add(Button.primary("appendLetter_" + userId + "_" + j,
+							Emoji.fromUnicode(UtilService.getInstance().getDefaultEmoji(letter))));
+				}
+			}
+			letterRows.add(ActionRow.of(buttons));
+		}
+		return letterRows;
+	}
+
+	public boolean appendLetterToCurrentWord(String indexStr) {
+		int index = Integer.parseInt(indexStr);
+		if (appendedLetters[index]) {
+			return false;
+		}
+		appendedLetters[index] = true;
+		char c = currentLevel.getAllowedLetterList().get(index);
+		currentWord.append(c);
+		return true;
+	}
+
+	public void resetCurrentWord() {
+		for (int i=0;i<appendedLetters.length;i++) {
+			appendedLetters[i] = false;
+		}
+		currentWord.setLength(0);
+	}
+
+	public String getCurrentWord() {
+		return currentWord.toString();
 	}
 }

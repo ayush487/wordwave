@@ -9,6 +9,7 @@ import com.ayushtech.wordwave.util.UserService;
 import com.ayushtech.wordwave.util.UtilService;
 import com.ayushtech.wordwave.util.VotingService;
 
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.guild.GuildJoinEvent;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -30,34 +31,33 @@ public class MainListener extends ListenerAdapter {
     public void onMessageReceived(MessageReceivedEvent event) {
         long channelId = event.getChannel().getIdLong();
         if (channelId == vote_notifs_channel) {
-            String voter_id = event.getMessage().getContentDisplay();
-            VotingService.getInstance().voteUser(event.getJDA(), voter_id);
+            VotingService.getInstance().voteUser(event);
             return;
         }
 
         if (event.getAuthor().isBot() || channelService.isChannelDisabled(event.getChannel().getIdLong())) {
             return;
         }
-        String message = event.getMessage().getContentRaw();
-        MetricService.getInstance().registerTextCommand(message);
-
-        if (CrosswordGameHandler.getInstance().isActiveGame(event.getAuthor().getIdLong(),
-                event.getChannel().getIdLong())) {
-            CrosswordGameHandler.getInstance().inspectAnswer(event);
-        }
-
-        if (message.startsWith("!crossword")) {
-            CrosswordGameHandler.getInstance().handleCrosswordTextCommand(event);
+        System.out.println("Received message");
+        Message referencedMessage = event.getMessage().getReferencedMessage();
+        if (referencedMessage == null) {
+            System.out.println("Referenced message is null");
             return;
         }
-
+        System.out.println("Referenced message is not null");
+        if (referencedMessage.getAuthor().getId().equals(event.getJDA().getSelfUser().getId())) {
+            if (CrosswordGameHandler.getInstance().isActiveGame(event.getAuthor().getIdLong(),
+                    event.getChannel().getIdLong())) {
+                CrosswordGameHandler.getInstance().inspectAnswer(event);
+            }
+        }
     }
 
     @Override
     public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
         MetricService.getInstance().registerSlashCommands(event);
         String commandName = event.getName();
-
+        
         switch (commandName) {
             case "enable":
                 channelService.handleEnableCommand(event);
@@ -81,7 +81,7 @@ public class MainListener extends ListenerAdapter {
             case "crossword":
                 CrosswordGameHandler.getInstance().handleCrosswordSlashCommand(event);
                 return;
-            case "help" :
+            case "help":
                 UserService.getInstance().handleHelpCommand(event);
                 return;
             case "balance":
@@ -161,8 +161,11 @@ public class MainListener extends ListenerAdapter {
         } else if (buttonId.startsWith("hintCrossword")) {
             CrosswordGameHandler.getInstance().handleHintButton(event);
             return;
-        } else if (buttonId.startsWith("shuffleCrossword")) {
-            CrosswordGameHandler.getInstance().handleShuffleButton(event);
+        } else if (buttonId.startsWith("appendLetter")) {
+            CrosswordGameHandler.getInstance().handleAppendLetterButton(event);
+            return;
+        } else if (buttonId.startsWith("submitWord")) {
+            CrosswordGameHandler.getInstance().handleSubmitWordButton(event);
             return;
         } else if (buttonId.startsWith("extraWords")) {
             CrosswordGameHandler.getInstance().handleExtraWordButton(event);

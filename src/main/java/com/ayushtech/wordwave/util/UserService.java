@@ -68,13 +68,11 @@ public class UserService {
 		EmbedBuilder eb = new EmbedBuilder();
 		eb.setColor(Color.blue);
 		eb.setTitle("Help");
-		eb.setDescription("Here are the commands you can use:");
-		eb.addField("/crossword", "Start a new crossword game", false);
-		eb.addField("/balance", "Check your balance", false);
-		eb.addField("/daily", "Claim your daily rewards", false);
-		eb.addField("/leaderboards", "View the leaderboards", false);
-		eb.addField("/extra_words", "View the extra words", false);
-		eb.addField("/vote", "Vote for WordWave and earn rewards", false);
+		// eb.setDescription("Here are the commands you can use:");
+		eb.addField("How to play ?", "**/crossword :** Command to start the crossword game.\nUse the buttons to make words and submit.\nAlternatively you can reply the game message with your words.", false);
+		eb.addField("__Other Commands__", 
+		"**/balance :** Check your balance\n**/daily :** : Claim your daily rewards\n**/leaderboards : **View the leaderboards\n**/extra_words : **View the extra words\n**/vote :** Vote for Wordwave and earn rewards",
+		 false);
 		eb.addField("__Moderator Commands__", "**/enable** : Enable the bot in this channel\n**/disable** : Disable the bot in this channel\n**/disable_all_channels** : Disable the bot in all channels\n`To use these commands, you need MANAGE_CHANNEL permissions.`", false);
 		event.getHook().sendMessageEmbeds(eb.build()).queue();
 	}

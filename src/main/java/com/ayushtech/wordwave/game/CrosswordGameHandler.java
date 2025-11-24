@@ -157,7 +157,7 @@ public class CrosswordGameHandler {
 					if (gameHashCode == currentRunningGameHashCode) {
 						game.cancelGame();
 						gameMap.remove(userId);
-					} 
+					}
 				});
 			}
 		} catch (SQLException e) {
@@ -263,16 +263,6 @@ public class CrosswordGameHandler {
 
 	}
 
-	public void handleShuffleButton(ButtonInteractionEvent event) {
-		String buttonOwnerId = event.getComponentId().split("_")[1];
-		if (!buttonOwnerId.equals(event.getUser().getId())) {
-			event.reply("This Button is not for you!").setEphemeral(true).queue();
-			return;
-		}
-		var game = gameMap.get(event.getUser().getIdLong());
-		game.shuffleAllowedLetters(event);
-	}
-
 	public void handleExtraWordCommand(SlashCommandInteractionEvent event) {
 		event.deferReply().queue();
 		long userId = event.getUser().getIdLong();
@@ -334,6 +324,23 @@ public class CrosswordGameHandler {
 
 	}
 
+	public void handleAppendLetterButton(ButtonInteractionEvent event) {
+		String buttonOwnerId = event.getComponentId().split("_")[1];
+		if (!buttonOwnerId.equals(event.getUser().getId())) {
+			event.reply("This Button is not for you!").setEphemeral(true).queue();
+			return;
+		}
+		event.deferEdit().queue();
+		String letter = event.getComponentId().split("_")[2];
+		var game = gameMap.get(event.getUser().getIdLong());
+		boolean isAppended = game.appendLetterToCurrentWord(letter);
+		if (isAppended) {
+			game.updateEmbed(null);
+		} else {
+			event.getHook().sendMessage("Cannot append more letters!").setEphemeral(true).queue();
+		}
+	}
+
 	private String getLevelDisplayed(char[][] grid, boolean blank) {
 		StringBuilder sb = new StringBuilder();
 		if (blank) {
@@ -369,6 +376,60 @@ public class CrosswordGameHandler {
 			}
 		}
 		return grid;
+	}
+
+	public void handleSubmitWordButton(ButtonInteractionEvent event) {
+		event.deferEdit().queue();
+		String buttonOwnerId = event.getComponentId().split("_")[1];
+		if (!buttonOwnerId.equals(event.getUser().getId())) {
+			event.reply("This Button is not for you!").setEphemeral(true).queue();
+			return;
+		}
+		var game = gameMap.get(event.getUser().getIdLong());
+		String currentWord = game.getCurrentWord();
+		if (game.currentLevel.getMinWordSize() > currentWord.length()) {
+			event.getHook()
+					.editMessageEmbedsById(event.getMessageId(),
+							game.getEmbed((byte) 2, currentWord.toUpperCase() + " is too short!"))
+					.setComponents(game.getComponents()).queue();
+			return;
+		}
+		var response = game.checkWord(currentWord);
+		game.resetCurrentWord();
+		if (response.isCorrect()) {
+			game.updateGame(response);
+			if (response.levelCompleted()) {
+				gameMap.remove(event.getUser().getIdLong());
+			}
+		} else {
+			// If the answer is not in the crossword
+			if (allWordList.contains(currentWord)) {
+				// If the word is actually a real word
+				if (game.isWordAnswerred(currentWord)) {
+					// If the word is already answerred
+					event.getHook()
+						.editMessageEmbedsById(event.getMessageId(),
+								game.getEmbed((byte) 2, currentWord.toUpperCase() + " is already answerred!"))
+						.setComponents(game.getComponents()).queue();
+				} else {
+					// If the word is not answerred yet!
+					game.addAnswerredWords(currentWord);
+					event.getHook()
+						.editMessageEmbedsById(event.getMessageId(),
+								game.getEmbed((byte) 2, currentWord.toUpperCase() + " added into extra words!"))
+						.setComponents(game.getComponents()).queue();
+					CompletableFuture
+							.runAsync(() -> UserDao.getInstance().updateExtraWordCount(event.getUser().getIdLong(), 1, true));
+				}
+
+			} else {
+				// If the word is not a real word : done
+				event.getHook()
+						.editMessageEmbedsById(event.getMessageId(),
+								game.getEmbed((byte) 2, currentWord.toUpperCase() + " is not a valid word!"))
+						.setComponents(game.getComponents()).queue();
+			}
+		}
 	}
 
 	public void inspectAnswer(MessageReceivedEvent event) {

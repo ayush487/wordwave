@@ -164,10 +164,6 @@ public class Level {
 		return false;
 	}
 
-	public void shuffleAllowedLetters() {
-		Collections.shuffle(allowed_letters);
-	}
-
 	public char[][] getGridSolved() {
 		return grid_solved;
 	}

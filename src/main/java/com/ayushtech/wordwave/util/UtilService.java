@@ -22,6 +22,7 @@ public class UtilService {
 
 	private static UtilService instance = null;
 	private Map<Character, String> emojiMap;
+	private Map<Character, String> defaultEmojiMap;
 	private final String bar1empty = Emoji.fromCustom("bar1empty", 1195296826132287541l, false).getAsMention();
 	private final String bar1half = Emoji.fromCustom("bar1half", 1195297050993115246l, true).getAsMention();
 	private final String bar1full = Emoji.fromCustom("bar1full", 1195297246464442368l, true).getAsMention();
@@ -39,6 +40,7 @@ public class UtilService {
 
 	private UtilService() {
 		this.emojiMap = new HashMap<Character, String>();
+		this.defaultEmojiMap = new HashMap<Character, String>();
 		setEmojis();
 	}
 
@@ -223,6 +225,32 @@ public class UtilService {
 		this.emojiMap.put('X', "<:x_:1333904491912892506>");
 		this.emojiMap.put('Y', "<:y_:1333904505691177044>");
 		this.emojiMap.put('Z', "<:z_:1333904517216997398>");
+		this.defaultEmojiMap.put('a', "\uD83C\uDDE6");
+		this.defaultEmojiMap.put('b', "\uD83C\uDDE7");
+		this.defaultEmojiMap.put('c', "\uD83C\uDDE8");
+		this.defaultEmojiMap.put('d', "\uD83C\uDDE9");
+		this.defaultEmojiMap.put('e', "\uD83C\uDDEA");
+		this.defaultEmojiMap.put('f', "\uD83C\uDDEB");
+		this.defaultEmojiMap.put('g', "\uD83C\uDDEC");
+		this.defaultEmojiMap.put('h', "\uD83C\uDDED");
+		this.defaultEmojiMap.put('i', "\uD83C\uDDEE");
+		this.defaultEmojiMap.put('j', "\uD83C\uDDEF");
+		this.defaultEmojiMap.put('k', "\uD83C\uDDF0");
+		this.defaultEmojiMap.put('l', "\uD83C\uDDF1");
+		this.defaultEmojiMap.put('m', "\uD83C\uDDF2");
+		this.defaultEmojiMap.put('n', "\uD83C\uDDF3");
+		this.defaultEmojiMap.put('o', "\uD83C\uDDF4");
+		this.defaultEmojiMap.put('p', "\uD83C\uDDF5");
+		this.defaultEmojiMap.put('q', "\uD83C\uDDF6");
+		this.defaultEmojiMap.put('r', "\uD83C\uDDF7");
+		this.defaultEmojiMap.put('s', "\uD83C\uDDF8");
+		this.defaultEmojiMap.put('t', "\uD83C\uDDF9");
+		this.defaultEmojiMap.put('u', "\uD83C\uDDFA");
+		this.defaultEmojiMap.put('v', "\uD83C\uDDFB");
+		this.defaultEmojiMap.put('w', "\uD83C\uDDFC");
+		this.defaultEmojiMap.put('x', "\uD83C\uDDFD");
+		this.defaultEmojiMap.put('y', "\uD83C\uDDFE");
+		this.defaultEmojiMap.put('z', "\uD83C\uDDFF");
 	}
 
 	public void setGuildEventWebhookUrl(String url) {
@@ -235,6 +263,10 @@ public class UtilService {
 
 	public void setWordRemovedWebhookUrl(String url) {
 		this.wordRemovedWebhookUrl = url;
+	}
+
+	public String getDefaultEmoji(char c) {
+		return this.defaultEmojiMap.get(c);
 	}
 
 }

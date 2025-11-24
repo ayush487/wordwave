@@ -42,16 +42,18 @@ public class WordwaveApplication {
         ChannelService.getInstance().loadDisabledChannels();
         VotingService.setVotingWebhookUrl(voterWebhookUrl);
 
-        DefaultShardManagerBuilder builder =
-        DefaultShardManagerBuilder.createDefault(BOT_TOKEN,
-        GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
-        GatewayIntent.DIRECT_MESSAGES);
+        // DefaultShardManagerBuilder builder =
+        // DefaultShardManagerBuilder.createDefault(BOT_TOKEN,
+        // GatewayIntent.MESSAGE_CONTENT, GatewayIntent.GUILD_MESSAGES,
+        // GatewayIntent.DIRECT_MESSAGES);
+        DefaultShardManagerBuilder builder = DefaultShardManagerBuilder.createDefault(BOT_TOKEN,
+                GatewayIntent.DIRECT_MESSAGES, GatewayIntent.GUILD_MESSAGES);
         builder.setActivity(Activity.playing("/crossword"));
         builder.disableCache(CacheFlag.VOICE_STATE, CacheFlag.EMOJI,
-        CacheFlag.STICKER, CacheFlag.SCHEDULED_EVENTS);
+                CacheFlag.STICKER, CacheFlag.SCHEDULED_EVENTS);
         builder.addEventListeners(new MainListener());
         builder.build();
-        
+
     }
 
 }

@@ -7,8 +7,8 @@ import com.ayushtech.wordwave.dbconnectivity.UserDao;
 import com.ayushtech.wordwave.dbconnectivity.VoterDao;
 
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 
 public class VotingService {
@@ -27,7 +27,9 @@ public class VotingService {
     return votingService;
   }
 
-  public void voteUser(JDA jda, String voter_id) {
+  public void voteUser(MessageReceivedEvent event) {
+    var voterUser = event.getMessage().getMentions().getMembers().get(0);
+    String voter_id = voterUser.getId();
     String dmMsg;
     boolean isWeekend = isWeekend();
     if (isWeekend) {
@@ -37,7 +39,7 @@ public class VotingService {
       UserDao.getInstance().addCoins(Long.parseLong(voter_id), 200);
       dmMsg = ":heart: **|** Thanks for voting us on [top.gg](<https://top.gg/bot/1331327187881562173/vote>)\n:money_with_wings: **|** You received 200 :coin: as reward!";
     }
-    jda.retrieveUserById(voter_id).queue(voter -> {
+    event.getJDA().retrieveUserById(voter_id).queue(voter -> {
       voter.openPrivateChannel()
           .flatMap(channel -> channel.sendMessage(dmMsg))
           .queue();
