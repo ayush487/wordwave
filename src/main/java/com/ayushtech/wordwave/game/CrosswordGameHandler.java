@@ -387,15 +387,16 @@ public class CrosswordGameHandler {
 		}
 		var game = gameMap.get(event.getUser().getIdLong());
 		String currentWord = game.getCurrentWord();
+		var response = game.checkWord(currentWord);
+		game.resetCurrentWord();
 		if (game.currentLevel.getMinWordSize() > currentWord.length()) {
+
 			event.getHook()
 					.editMessageEmbedsById(event.getMessageId(),
 							game.getEmbed((byte) 2, currentWord.toUpperCase() + " is too short!"))
 					.setComponents(game.getComponents()).queue();
 			return;
 		}
-		var response = game.checkWord(currentWord);
-		game.resetCurrentWord();
 		if (response.isCorrect()) {
 			game.updateGame(response);
 			if (response.levelCompleted()) {
